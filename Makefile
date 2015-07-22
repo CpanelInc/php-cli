@@ -122,3 +122,4 @@ check:
 errmsg:
 	@echo -e "\nERROR: You haven't set up OBS correctly on your machine.\n $(ERRMSG)\n"
 	@exit 1
+
