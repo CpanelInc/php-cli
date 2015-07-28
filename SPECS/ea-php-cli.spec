@@ -52,6 +52,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/local/bin/php
 
 %changelog
+* Tue Jul 28 2015 Julian Brown <julian.brown@cpanel.net> - 0.0.2-2
+- Look for AddType instead of AddHandler
+
 * Tue Jul 24 2015 Julian Brown <julian.brown@cpanel.net> - 0.0.1-2
 - Add copy to /usr/local/bin/php
 
