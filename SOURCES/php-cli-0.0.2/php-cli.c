@@ -260,7 +260,7 @@ char*   create_path (char *path, char *fname)
     return get_string_copy (static_out);
 }
 
-static char searchy [] = "AddHandler application/x-httpd-php";
+static char searchy [] = "AddType application/x-httpd-";
 
 char*   search_for_php_version (key_pair_t *next)
 {
