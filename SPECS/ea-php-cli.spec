@@ -10,8 +10,8 @@
 %define debug_package %{nil}
 
 Name:           %{ns_name}-%{upstream_name}
-Version:        0.0.2
-Release:        2%{dist}
+Version:        0.0.3
+Release:        1%{dist}
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
 Url:            http://cpanel.net
@@ -23,7 +23,7 @@ BuildRequires:  libtool
 Requires:       libyaml-devel
 Requires:       libyaml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
-Source0:        php-cli-0.0.2.tar.gz
+Source0:        php-cli-0.0.3.tar.gz
 
 %description
 php-cli is a program installed to /usr/bin/php that when executed will run
@@ -52,6 +52,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/local/bin/php
 
 %changelog
+* Thu Jul 30 2015 Julian Brown <julian.brown@cpanel.net> - 0.0.3-1
+- Minor but needed change in AddType search.
+
 * Tue Jul 28 2015 Julian Brown <julian.brown@cpanel.net> - 0.0.2-2
 - Look for AddType instead of AddHandler
 
