@@ -161,10 +161,16 @@ void load_php_cli ()
         load_paths_conf ();
         ea_php_conf_yaml = get_concat_strings (apache_conf_dir, "/php.conf.yaml");
     }
-        
+    
+#ifndef LITESPEED    
     php_bin_pattern = get_value (php_cli_head, "php_bin_pattern");
     if (php_bin_pattern == NULL)
         php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/php");
+#else
+    php_bin_pattern = get_value (php_cli_head, "lsphp_bin_pattern");
+    if (php_bin_pattern == NULL)
+        php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/lsphp");
+#endif
 
     return;
 }
@@ -439,9 +445,11 @@ SKIP:
 #endif
 
     i = execv (&php_bin [0], xargv);
-
+#ifndef LITESPEED
     printf ("php_cli unable to execute php :%d: (%d) :%s:\n", i, errno, strerror (errno));
-
+#else
+    printf ("php_litespeed unable to execute php :%d: (%d) :%s:\n", i, errno, strerror (errno));
+#endif
     return (0);
 }
 

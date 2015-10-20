@@ -2,3 +2,4 @@
 ea_php_yaml: /root/php_cli/test/php.conf.yaml
 testing_root_dir: /root/php_cli/test
 php_bin_pattern: /opt/cpanel/ea-php%s/root/usr/bin/php
+lsphp_bin_pattern: /opt/cpanel/ea-php%s/root/usr/bin/lsphp
