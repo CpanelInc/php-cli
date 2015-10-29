@@ -18,7 +18,7 @@ BuildRequires:  libtool
 Requires:       libyaml-devel
 Requires:       libyaml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
-Source0:        php-cli-0.0.4.tar.gz
+Source0:        php-cli-0.0.5.tar.gz
 
 %description
 php-cli is a program installed to /usr/bin/php that when executed will run
