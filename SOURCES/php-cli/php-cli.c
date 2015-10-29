@@ -161,15 +161,24 @@ void load_php_cli ()
         load_paths_conf ();
         ea_php_conf_yaml = get_concat_strings (apache_conf_dir, "/php.conf.yaml");
     }
-    
-#ifndef LITESPEED    
-    php_bin_pattern = get_value (php_cli_head, "php_bin_pattern");
-    if (php_bin_pattern == NULL)
-        php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/php");
-#else
+   
+    /* here we are getting a value out of a configuration file, if it is
+     * present.
+     */
+
+#ifdef LITESPEED    
     php_bin_pattern = get_value (php_cli_head, "lsphp_bin_pattern");
+#endif
+
+    if (php_bin_pattern == NULL)
+        php_bin_pattern = get_value (php_cli_head, "php_bin_pattern");
+
+#ifdef LITESPEED    
     if (php_bin_pattern == NULL)
         php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/lsphp");
+#else
+    if (php_bin_pattern == NULL)
+        php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/php");
 #endif
 
     return;
@@ -450,6 +459,8 @@ SKIP:
 #else
     printf ("php_litespeed unable to execute php :%d: (%d) :%s:\n", i, errno, strerror (errno));
 #endif
+    printf ("when attempting to run (%s)\n", &php_bin [0]);
+
     return (0);
 }
 

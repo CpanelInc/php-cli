@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include "php_cli.h"
+#include "php-cli.h"
 
 int main (
     int     argc,

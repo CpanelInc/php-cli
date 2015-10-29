@@ -5,7 +5,7 @@
 %define debug_package %{nil}
 
 Name:           %{ns_name}-%{upstream_name}
-Version:        0.0.4
+Version:        0.0.5
 Release:        1%{dist}
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -65,6 +65,10 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Tue Oct 29 2015 Julian BRown <julian.brown@cpanel.net> - 0.0.5-1
+- Cleaned up some minor issues with lsphp
+- Cleaned up test code compile issues
+
 * Tue Oct 20 2015 Matt Dees <matt@cpanel.net> - 0.0.4-1
 - Add in lsphp support patch created by cloudlinux
 

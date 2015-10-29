@@ -26,7 +26,7 @@ test_yaml_token: test_yaml_token.o
 test_yaml: test_yaml.o
 	$(CC) $(CFLAGS) -o $@ $^ $(CFLAGS) $(LIBS)
 
-all: php-cli test_yaml test_yaml_token parse_yaml parse_conf php-litespeed
+all: php-cli php-litespeed test_yaml test_yaml_token parse_yaml parse_conf
 
 clean:
 	rm -rf *.o php-cli php-litespeed
