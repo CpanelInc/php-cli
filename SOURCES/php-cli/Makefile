@@ -29,5 +29,5 @@ test_yaml: test_yaml.o
 all: php-cli php-litespeed test_yaml test_yaml_token parse_yaml parse_conf
 
 clean:
-	rm -rf *.o php-cli php-litespeed
+	rm -rf *.o php-cli php-litespeed test_yaml test_yaml_token parse_yaml parse_conf
 

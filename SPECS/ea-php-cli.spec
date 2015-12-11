@@ -5,7 +5,7 @@
 %define debug_package %{nil}
 
 Name:           %{ns_name}-%{upstream_name}
-Version:        0.0.5
+Version:        0.0.6
 Release:        1%{dist}
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -18,7 +18,7 @@ BuildRequires:  libtool
 Requires:       libyaml-devel
 Requires:       libyaml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
-Source0:        php-cli-0.0.5.tar.gz
+Source:         php-cli-%{version}.tar.gz
 
 %description
 php-cli is a program installed to /usr/bin/php that when executed will run
@@ -35,8 +35,7 @@ the version of users configured version of lsphp.
 
 
 %prep
-%setup -q -n php-cli-%{version}
-mkdir -p %{buildroot}/usr/bin
+%setup -q -n php-cli
 pwd
 
 %build
@@ -46,12 +45,13 @@ make php-litespeed
 
 
 %install
-install -m 755 -d $RPM_BUILD_ROOT/usr/bin
-install php-cli $RPM_BUILD_ROOT/usr/bin/php
-install -m 755 -d $RPM_BUILD_ROOT/usr/local/bin
-install php-cli $RPM_BUILD_ROOT/usr/local/bin/php
-install php-litespeed $RPM_BUILD_ROOT/usr/local/bin/lsphp
-install php-litespeed $RPM_BUILD_ROOT/usr/bin/lsphp
+rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/bin
+install php-cli %{buildroot}/usr/bin/php
+mkdir -p %{buildroot}/usr/local/bin
+install php-cli %{buildroot}/usr/local/bin/php
+install php-litespeed %{buildroot}/usr/local/bin/lsphp
+install php-litespeed %{buildroot}/usr/bin/lsphp
 
 %clean
 rm -rf %{buildroot}
@@ -65,6 +65,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Fri Dec 11 2015 S. Kurt Newman <kurt.newman@cpanel.net> - 0.0.6-1
+- Supports new MultiPHP php.conf location
+
 * Tue Oct 29 2015 Julian BRown <julian.brown@cpanel.net> - 0.0.5-1
 - Cleaned up some minor issues with lsphp
 - Cleaned up test code compile issues
