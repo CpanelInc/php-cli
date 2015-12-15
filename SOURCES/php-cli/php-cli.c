@@ -23,6 +23,7 @@ char            *php_bin_pattern = NULL;
  *   to update <WHEREVER THIS LIVES IN /usr/local/cpanel HERE> accordingly also.
  */
 
+char            *default_php_conf = "/etc/cpanel/ea4/php.conf"; // cpanel 11.54 location
 char            apache_conf_dir [1024] = "/etc/apache2/conf.d";
 
 int file_exists (char *fname)
@@ -158,8 +159,14 @@ void load_php_cli ()
 
     if (ea_php_conf_yaml == NULL)
     {
-        load_paths_conf ();
-        ea_php_conf_yaml = get_concat_strings (apache_conf_dir, "/php.conf.yaml");
+        /* examine 11.54+ location first */
+        ea_php_conf_yaml = default_php_conf; // hopefully no one tries to free() this
+
+        /* doesn't exist, try the 11.52 location */
+        if( !file_exists( ea_php_conf_yaml ) ) {
+            load_paths_conf ();
+            ea_php_conf_yaml = get_concat_strings (apache_conf_dir, "/php.conf.yaml");
+        }
     }
    
     /* here we are getting a value out of a configuration file, if it is
@@ -243,18 +250,21 @@ char*   get_default_php_version ()
     load_php_cli ();
     if (!file_exists (ea_php_conf_yaml))
     {
-        fputs ("Easy Apache PHP Config file not found\n", stderr);
+        fprintf( stderr, "EasyApache PHP config file not found: %s\n", default_php_conf );
         exit (1);
     }
 
     php_config_head = parse_yaml_file (ea_php_conf_yaml);
-    php_version_string = get_value (php_config_head, "phpversion");
+
+    php_version_string = get_value (php_config_head, "default"); /* cpanel 11.54+ key */
+    if( !php_version_string )
+        php_version_string = get_value (php_config_head, "phpversion"); /* cpanel 11.52 key */
 
     /* last 2 chars are the version number */
 
     if (php_version_string == NULL)
     {
-        fputs ("Default PHP not found\n", stderr);
+        fputs ("Default PHP not defined in EasyApache configuration file\n", stderr);
         exit (1);
     }
   

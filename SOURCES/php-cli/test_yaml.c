@@ -7,7 +7,10 @@ int main (
     int     argc,
     char    *argv [])
 {
-    FILE *fh = fopen("/etc/apache2/conf.d/php.conf.yaml", "r");
+    FILE *fh = fopen("/etc/cpanel/ea4/php.conf", "r");
+
+    if( !fh )
+        fh = fopen("/etc/apache2/conf.d/php.conf.yaml", "r");
 
     yaml_parser_t parser;
     yaml_event_t  event;   /* New variable */
