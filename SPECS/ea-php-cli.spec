@@ -6,7 +6,9 @@
 
 Name:           %{ns_name}-%{upstream_name}
 Version:        0.0.6
-Release:        1%{dist}
+# Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
+%define release_prefix 3
+Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
 Url:            http://cpanel.net
@@ -65,6 +67,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Mon Jun 20 2016 Dan Muey <dan@cpanel.net> - 0.0.6-3
+- EA-4383: Update Release value to OBS-proof versioning
+
 * Fri Dec 11 2015 S. Kurt Newman <kurt.newman@cpanel.net> - 0.0.6-1
 - Supports new MultiPHP php.conf location
 
