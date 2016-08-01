@@ -182,10 +182,10 @@ void load_php_cli ()
 
 #ifdef LITESPEED    
     if (php_bin_pattern == NULL)
-        php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/lsphp");
+        php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/lsphp"); // See EA-4943
 #else
     if (php_bin_pattern == NULL)
-        php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/php");
+        php_bin_pattern = get_string_copy ("/opt/cpanel/ea-php%s/root/usr/bin/php-cgi");
 #endif
 
     return;

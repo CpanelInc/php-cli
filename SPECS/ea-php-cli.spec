@@ -7,7 +7,7 @@
 Name:           %{ns_name}-%{upstream_name}
 Version:        0.0.6
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 3
+%define release_prefix 4
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -67,6 +67,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Mon Aug 01 2016 Dan Muey <dan@cpanel.net> - 0.0.6-4
+- EA-4905: Update EA4 php-cli wrapper to use php-cgi as a temporary fix for EA-4337
+
 * Mon Jun 20 2016 Dan Muey <dan@cpanel.net> - 0.0.6-3
 - EA-4383: Update Release value to OBS-proof versioning
 
