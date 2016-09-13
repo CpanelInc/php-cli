@@ -1,0 +1,284 @@
+------------------------------------------------------------------------
+                       Installation Instructions
+------------------------------------------------------------------------
+                               Edwin Buck
+------------------------------------------------------------------------
+                               2016-08-01
+
+Copyright (C) 2016 Cpanel, Inc.
+
+
+   Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.  This file is offered as-is,
+without warranty of any kind.
+
+Basic Installation
+   
+   For most purposes, to install this software you should type the
+   command (as root)
+
++-----------------+
+yum install php-cli
++-----------------+
+
+   In most cases you should not require any additional steps, or
+   customization.  If you find an error with the software installed
+   by this command, you can contact cPanel, Inc. and they will fix it
+   for you.
+
+   On a rare occasion, you may desire to alter the software for a
+   specific purpose.  Note that altered versions of the sofware are not
+   supported by cPanel, Inc. even if the alterations are worthwhile and
+   error free.  Without written agreement otherwise, cPanel, Inc. only
+   supports software they build internally.
+
+Development Deployment installation
+
+   If you are modifying the behvaior of this package with the intent
+   to install in a non-development enviornment, several steps should
+   be followed:
+
+   * Setup the packaging environment.  This includes setting up a local
+     RPM build enviornment, installing the provided SPECS/php-cli.spec
+     file and the SOURCES/php-cli-<verson>.tar.gz file.
+
+   * Follow the instructions for Development Installation.
+
+   * Repackage the Development Installation sources.
+
+   * Replace the SOURCES/php-cli-<version>.tar.gz.file with the new
+     version.
+
+   * Build a new RPM package.
+
+   * Follow your organization's distribution policy to install the new
+     RPM package.
+
+   Note that to repackage php-cli a number of development tools and
+   supporting libraries may need to be installed on your system.  As
+   all systems are slightly different, you will have to determine which
+   tools need installed, should they be absent.  Experience with RPM
+   packaging is also recommended.
+   
+Development Installation
+
+   In you are modifying the behavior of this package, several steps
+   should be followed:
+
+   * Setup the build environment.  This includes adding platform
+     specific tools to ensure a similar build across platforms.
+
+   * Modify the sources in the include/, src/, and tests/ directory
+     as appropriate.
+
+   * Build the software and run the test suite.
+
+   * Install the software for development integration testing.
+
+   * Restore the package managed software after development integration
+     testing.
+
+   Note that to modify php-cli a number of development tools and
+   supporting libraries may need to be installed on your system.  As
+   all systems are slightly different, you will have to determine which
+   tools need installed, should they be absent.  Experience with C
+   development and autotools is also recommended.
+
+Development Instructions
+
+* Setting up the build environment
+
+    To set up a build environment, from this directory run the following
+    commands, in order
+
++--------------------+
+./bootstrap
++--------------------+
+
+    It is important to perform an initial build to verify your build
+    environment is set up correctly.  To do so, run the following
+    commands, in order
+
++--------------------+
+make
+make check
++--------------------+
+
+    and your build enviornment should be complete, having also preformed
+    the initial build.  In the event you encounter errors, you will need
+    to independently research and fix them.  cPanel does not offer
+    customer support for build issues.
+    
+* Modifying sources
+
+    Using a suitable editor, you will likely edit the files under
+    include/, src/, and tests/.  A background in C programming is
+    required.  Each of these subdirectories have specific purpose,
+    as detailed below:
+
+*-----------+-----------------------------------------------+
+| Directory | Purpose                                       | 
+*-----------+-----------------------------------------------+
+| include/  | holds header (*.h) files for src/ and tests/  |
+*-----------+-----------------------------------------------+
+| src/      | holds source (*.c) files for the installables |
+*-----------+-----------------------------------------------+
+| tests/    | holds source (*.c) files for the tests        |
+*-----------+-----------------------------------------------+
+
+    In the event you must add or remove files, you will also need to
+    consult the GNU automake / autoconf documentation to make the build
+    system aware of your changes.
+
+* Building and Unit testing the software
+
+    At any point in development, you may wish to compile and test the
+    current state of your modifications.  To do so, from the same
+    directory containing the "configure" script, run the following
+    commands, in order:
+
++--------+
+make
+make check
++--------+
+
+* Installing the software for development testing purposes.
+
+    Occasionally you will want to perform integration testing while in
+    development.  To do so you will need to install the development
+    before making a commitment to repackage the software.  Note that
+    this will overlay your package managed versions of the relevant
+    software.  To install from the development space run the following
+    commands, in order:
+
++----------+
+make
+make install
++----------+
+
+* Removing the software after development testing purposes.
+
+    In the event you have installed development verisons of the software
+    to perform integration testing.  You may wish to revert the
+    installation, restoring your system to the package-managed versions.
+
+    To uninstall the development versions of the software and reinstall
+    the package managed versions, run the following commands, in order:
+
++----------------------+
+make
+make uninstall
+yum reinstall ea-php-cli
++----------------------+
+
+    Some systems might have the lsphp executables installed, and those
+    systems should perform one additiona step to restore lsphp
+    executable to the RPM managed version.  To check if your system
+    requires a reinstallation of the lsphp executable, rutn the command
+
++---------------------+
+rpm -q ea-php-cli-lsphp
++---------------------+
+
+    And if the output reads like "package ea-php-cli-lsphp is not
+    installed" this additional step is not required.  If the output
+    reads like "ea-php-cli-lsphp-<version>" then restore the RPM managed
+    lsphp binaries with the command
+
+
++----------------------------+
+yum reinstall ea-php-cli-lsphp
++----------------------------+
+
+Development Deployment Instructions
+
+* Set up a packaging environment
+
+    Before working on repackinging a development verison, you will need
+    to set up a RPM packging environment.  This is most easily done by
+    running the command:
+
++--------------+
+rpmdev-setuptree
++--------------+
+
+    We recommend building development packagings as a non-root user, to
+    protect against any unexpected developmental side-effects; however,
+    building with the root user should work.
+
+    Once the "~/rpmdev" tree is created, run the following commands in
+    order to perform the initial build:
+
++--------------------------------------------------+
+cp SOURCES/php-cli-<version>.tar.gz ~/rpmdev/SOURCES
+cp SPECS/php-cli.spec ~/rpmdev/SPECS
+rpmbuild -ba ~/rpmdev/SPECS/php-cli.spec
+ls ~/rpmdev/RPMS/*
++--------------------------------------------------+
+
+    If you see ea-php-cli-<version>.rpm and ea-php-cli-<version>.src.rpm
+    files, your inital build was successful.
+
+* Repackage the sources from the Development Instructions.
+
+    To obtain a new set of sources, enter the development enviornment
+    you used to make your developmental changes.
+
+    Note that you should update the version number in configure.ac
+    to prevent version number confusion between the existing and next
+    release of php-cli.  To do so, edit configure.ac as appropriate
+    and run the following commands, in order:
+
++---------+
+autoconf
+./configure
+make
+make check
++---------+
+
+    Verify that no compile errors or warnings exist and all tests have
+    passed, then run the command:
+
++--------+
+make dist
++--------+
+
+    And a new php-cli-<version>.tar.gz file will be created in the
+    development environment root directory.
+
+* Replace the packagin sources with the new developmental sources.
+
+    You need to place the new developmental sources in your RPM build
+    tree.  To do so, we recommend removing the old source bundle and
+    copying in the new source build with the following commands:
+
++---------------------------------------------+
+rm ~/rpmbuild/SOURCE/php-cli*.tar.gz
+cp ./php-cli-<version>.tar.gz ~/rpmbuild/SOURCE
++---------------------------------------------+
+
+    Note that you will likely have to make udpates to 
+    ~/rpmbuild/SPECS/php-cli.spec to match the version number of the
+    new source package.  
+
+
+* Build a new RPM package
+
+    Once the new sources are in place, and the spec file is updated, you
+    may build the package with the command:
+
++----------------------------------------+
+rpmbuild -bb ~/rpmbuild/SPECS/php-cli.spec
++----------------------------------------+
+
+    And new verisons of the RPM files should appear somewhere under 
+    ~/rpmbuild/RPMS/ depending on your platform and possible spec file
+    changes.
+
+* Deploying the new packages
+
+    Once you ahve your new RPM packages, you will need to deploy them
+    to the desired machines.  You should use whatever deployment process
+    your organization has provided, and cPanel provides no support for
+    deployment of software it doesn't build internally.

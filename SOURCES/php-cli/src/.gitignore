@@ -1,0 +1,8 @@
+.deps/
+Makefile
+Makefile.in
+*.a
+*.o
+php-cgi
+php-cli
+php-lightspeed
