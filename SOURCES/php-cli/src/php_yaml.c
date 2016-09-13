@@ -5,6 +5,19 @@
 
 #include "php-cli.h"
 
+char* get_value (key_pair_t *next, char* key)
+{
+    while (next != NULL)
+    {
+        if (!strcmp (next->key, key))
+            return next->value;
+
+        next = next->next;
+    } 
+
+    return NULL;
+}
+
 int     istrstr (char *haystack, char *needle)
 {
     char    uhaystack [1024];
@@ -70,8 +83,7 @@ key_pair_t*     alloc_key_pair ()
     return pair;
 }
 
-key_pair_t*     parse_yaml_file (char  *fname)
-{
+key_pair_t*     parse_yaml_file(char  *fname) {
     yaml_parser_t   parser;
     FILE            *fh;
     yaml_token_t    token;
@@ -144,19 +156,6 @@ key_pair_t*     parse_yaml_file (char  *fname)
     yaml_parser_delete (&parser);
 
     return head;
-}
-
-char* get_value (key_pair_t *next, char* key)
-{
-    while (next != NULL)
-    {
-        if (!strcmp (next->key, key))
-            return next->value;
-
-        next = next->next;
-    } 
-
-    return NULL;
 }
 
 void debug_print_pairs (key_pair_t *next)
