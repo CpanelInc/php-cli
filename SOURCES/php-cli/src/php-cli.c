@@ -1,3 +1,19 @@
+/* ea-php-cli - src/php-cli.c                   Copyright 2016 cPanel, Inc. */
+/*                                                     All rights Reserved. */
+/* copyright@cpanel.net                                   http://cpanel.net */
+/*                                                                          */
+/* Licensed under the Apache License, Version 2.0 (the "License");          */
+/* you may not use this file except in compliance with the License.         */
+/* You may obtain a copy of the License at                                  */
+/*                                                                          */
+/*     http://www.apache.org/licenses/LICENSE-2.0                           */
+/*                                                                          */
+/* Unless required by applicable law or agreed to in writing, software      */
+/* distributed under the License is distributed on an "AS IS" BASIS,        */
+/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. */
+/* See the License for the specific language governing permissions and      */
+/* limitations under the License.                                           */
+
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -112,6 +128,7 @@ int main(int argc, char* argv[]) {
     char              php_file[1024] = { 0 };
     char              php_bin[1024]  = { 0 };
     struct cli_config cli_config;
+    int               has_verbose = 0;
 
     int     i;
     key_pair_t* command_line = NULL;
@@ -185,6 +202,10 @@ int main(int argc, char* argv[]) {
         xargv [i] = NULL;
     }
 
+    cli_get_verbose(&has_verbose, xargv);
+    if (has_verbose) {
+       printf("ea-php-cli Copyright 2016 cPanel, Inc.\n");
+    }
     i = execv (&php_bin [0], xargv);
     printf ("php_cli unable to execute php :%d: (%d) :%s:\n", i, errno, strerror (errno));
     printf ("when attempting to run (%s)\n", &php_bin [0]);

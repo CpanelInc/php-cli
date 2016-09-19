@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/strategy_get_lsphp_bin_002.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/cli_get_verbose_001.c     Copyright 2016 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -18,42 +18,31 @@
   #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "strategy.h"
-
-int get_bin_php_default_pattern_called = 0;
-
-void get_bin_php_default_pattern(char* buffer, size_t size) {
-   get_bin_php_default_pattern_called = 1;
-   strncpy(buffer, "/my/lsphp_alternate/%s/bin/php", size);
-}
+#include "cli.h"
 
 int main(int argc, char** argv) {
-  struct cli_config cli_config;
-  char* php_version = 0;
-  char lsphp_bin[1024] = "junk";
+  char* testcase[] = { "executable", "first", "second", "third", "fourth", 0 };
 
-  printf("testing strategy_get_lsphp_bin on null version\n");
-  printf("  calling strategy_get_lsphp_bin(\"%s\", %d, &(cli_config), %s)\n", lsphp_bin, 1024, php_version);
-  strategy_get_lsphp_bin(lsphp_bin, 1024, &cli_config, php_version);
+  int* has_verbose = 0;
+  int  return_value = 0;
 
-  if (get_bin_php_default_pattern_called) {
-    printf("ERROR: get_bin_php_default_pattern was called\n");
+  printf("testing cli_verbose on null buffer\n");
+  printf("  calling cli_verbose(%p, &{\"executable\", \"first\", \"second\", \"third\", \"fourth\", 0 })\n", has_verbose);
+
+  return_value = cli_get_verbose(has_verbose, testcase);
+
+  /* basically the program should not crash */
+  if (return_value == 0) {
+    printf("ERROR: return value %d was zero\n", return_value);
     return 1;
   } else {
-    printf("  get_bin_php_default_pattern not called\n");
-  }
-
-  if (strnlen(lsphp_bin, 1024) != 0) {
-    printf("ERROR: lsphp_bin \"%s\" is not empty\n", lsphp_bin);
-    return 1;
-  } else {
-    printf("  lsphp_bin \"%s\" is empty\n", lsphp_bin);
+    printf("  return value %d was not zero\n", return_value);
   }
 
   printf("test complete\n");
   return 0;
 }
+
