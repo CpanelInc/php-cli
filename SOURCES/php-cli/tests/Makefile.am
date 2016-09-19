@@ -1,3 +1,19 @@
+## ea-php-cli - tests/Makefile.am            Copyright 2016 cPanel, Inc.
+##                                                  All rights Reserved.
+## copyright@cpanel.net                                http://cpanel.net
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+## 
+##     http://www.apache.org/licenses/LICENSE-2.0
+## 
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) tap-driver.sh
 
 AM_CFLAGS = -I$(top_srcdir)/include
@@ -16,6 +32,14 @@ cli_get_last_file_004 \
 cli_get_last_file_005 \
 cli_get_last_file_006 \
 cli_get_last_file_007 \
+cli_get_verbose_001 \
+cli_get_verbose_002 \
+cli_get_verbose_003 \
+cli_get_verbose_004 \
+cli_get_verbose_005 \
+cli_get_verbose_006 \
+cli_get_verbose_007 \
+cli_get_verbose_008 \
 cli_config_read_cli_config_001 \
 cli_config_read_cli_config_002 \
 cli_config_read_cli_config_003 \
