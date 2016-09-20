@@ -1,0 +1,13 @@
+compile
+config.guess
+config.sub
+depcomp
+install-sh
+mdate-sh
+missing
+mkinstalldirs
+py-compatible
+tap-driver.pl
+test-driver
+texinfo.tex
+ylwrap
