@@ -53,9 +53,6 @@ Development Deployment installation
 
    * Repackage the Development Installation sources.
 
-   * Replace the SOURCES/php-cli-<version>.tar.gz.file with the new
-     version.
-
    * Build a new RPM package.
 
    * Follow your organization's distribution policy to install the new
@@ -252,17 +249,6 @@ make dist
 
     And a new php-cli-<version>.tar.gz file will be created in the
     development environment root directory.
-
-* Replace the packagin sources with the new developmental sources.
-
-    You need to place the new developmental sources in your RPM build
-    tree.  To do so, we recommend removing the old source bundle and
-    copying in the new source build with the following commands:
-
-+---------------------------------------------+
-rm ~/rpmbuild/SOURCE/php-cli*.tar.gz
-cp ./php-cli-<version>.tar.gz ~/rpmbuild/SOURCE
-+---------------------------------------------+
 
     Note that you will likely have to make udpates to 
     ~/rpmbuild/SPECS/php-cli.spec to match the version number of the

@@ -9,6 +9,5 @@ configure
 error_log
 Makefile.in
 Makefile
-php-cli-*.tar.gz
 stamp-h1
 \.*\.swp
