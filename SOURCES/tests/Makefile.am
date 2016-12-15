@@ -82,6 +82,48 @@ path_get_htaccess_php_version_006 \
 path_get_htaccess_php_version_007 \
 path_get_htaccess_php_version_008 \
 path_get_htaccess_php_version_009 \
+paths_config_read_paths_config_001 \
+paths_config_read_paths_config_002 \
+paths_config_read_paths_config_003 \
+paths_config_read_paths_config_004 \
+paths_config_read_paths_config_005 \
+paths_config_read_paths_config_006 \
+paths_config_read_paths_config_007 \
+paths_config_read_paths_config_008 \
+paths_config_read_paths_config_009 \
+paths_config_read_paths_config_010 \
+paths_config_read_paths_config_011 \
+paths_config_read_paths_config_012 \
+paths_config_read_paths_config_013 \
+paths_config_read_paths_config_014 \
+paths_config_read_paths_config_015 \
+paths_config_read_paths_config_016 \
+paths_config_read_paths_config_017 \
+paths_config_read_paths_config_018 \
+paths_config_read_paths_config_019 \
+paths_config_read_paths_config_020 \
+paths_config_read_paths_config_021 \
+paths_config_read_paths_config_022 \
+paths_config_read_paths_config_023 \
+paths_config_read_paths_config_024 \
+paths_config_read_paths_config_025 \
+paths_config_read_paths_config_026 \
+paths_config_read_paths_config_027 \
+paths_config_read_paths_config_028 \
+paths_config_read_paths_config_029 \
+paths_config_read_paths_config_030 \
+paths_config_read_paths_config_031 \
+paths_config_read_paths_config_032 \
+paths_config_read_paths_config_033 \
+paths_config_read_paths_config_034 \
+paths_config_read_paths_config_035 \
+paths_config_read_paths_config_036 \
+paths_config_read_paths_config_037 \
+paths_config_read_paths_config_038 \
+paths_config_read_paths_config_039 \
+paths_config_read_paths_config_040 \
+paths_config_read_paths_config_041 \
+paths_config_read_paths_config_042 \
 strategy_get_lsphp_bin_001 \
 strategy_get_lsphp_bin_002 \
 strategy_get_lsphp_bin_003 \
@@ -104,13 +146,21 @@ strategy_get_php_bin_015 \
 strategy_get_php_bin_016 \
 strategy_get_php_bin_017 \
 strategy_get_php_bin_018 \
-strategy_get_php_bin_019
+strategy_get_php_bin_019 \
+strategy_get_php_conf_file_001 \
+strategy_get_php_conf_file_002 \
+strategy_get_php_conf_file_003 \
+strategy_get_php_conf_file_004 \
+strategy_get_php_conf_file_005 \
+strategy_get_php_conf_file_006 \
+strategy_get_php_conf_file_007 \
+strategy_get_php_conf_file_008 
 
 TESTS = $(TEST_CASES)
 
 AM_CLFAGS = -O0
 
-check_PROGRAMS = $(TEST_CASES) parse_conf parse_yaml test_yaml test_yaml_token
+check_PROGRAMS = $(TEST_CASES) parse_yaml test_yaml test_yaml_token
 
 cli_get_last_file_003_LDFLAGS   = -Wl,--wrap=access
 cli_get_last_file_004_LDFLAGS   = -Wl,--wrap=access
@@ -143,6 +193,48 @@ path_get_htaccess_php_version_006_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_
 path_get_htaccess_php_version_007_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
 path_get_htaccess_php_version_008_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
 path_get_htaccess_php_version_009_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
+paths_config_read_paths_config_001_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
+paths_config_read_paths_config_002_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
+paths_config_read_paths_config_003_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
+paths_config_read_paths_config_004_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
+paths_config_read_paths_config_005_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_006_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_007_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_008_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_009_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_010_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_011_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_012_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_013_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_014_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_015_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_016_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_017_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_018_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_019_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_020_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_021_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_022_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_023_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_024_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_025_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_026_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_027_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_028_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_029_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_030_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_031_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_032_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_033_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_034_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_035_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_036_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_037_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_038_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_039_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_040_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_041_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
+paths_config_read_paths_config_042_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose,--wrap=fgets
 cli_config_read_cli_config_001_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
 cli_config_read_cli_config_002_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
 cli_config_read_cli_config_003_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
@@ -174,8 +266,11 @@ strategy_get_php_bin_016_LDFLAGS = -Wl,--wrap=__xstat
 strategy_get_php_bin_017_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
 strategy_get_php_bin_018_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
 strategy_get_php_bin_019_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
-
-parse_conf_LDADD = ../src/libphpcli.a
+strategy_get_php_conf_file_004_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
+strategy_get_php_conf_file_005_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
+strategy_get_php_conf_file_006_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
+strategy_get_php_conf_file_007_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
+strategy_get_php_conf_file_008_LDFLAGS = -Wl,--wrap=__xstat,--wrap=access
 
 parse_yaml_LDADD = ../src/libphpcli.a
 

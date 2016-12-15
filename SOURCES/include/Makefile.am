@@ -14,4 +14,4 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-noinst_HEADERS = cli.h cli-config.h htaccess.h path.h php-cli.h strategy.h
+noinst_HEADERS = cli.h cli-config.h htaccess.h path.h paths-config.h php-cli.h strategy.h
