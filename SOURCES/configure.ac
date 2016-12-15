@@ -14,7 +14,7 @@ dnl WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 dnl See the License for the specific language governing permissions and
 dnl limitations under the License.
 
-AC_INIT([php-cli], [0.1.0], [support@cpanel.net])
+AC_INIT([php-cli], [0.2.0], [support@cpanel.net])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([am-tools])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
@@ -28,6 +28,7 @@ AM_PROG_AR
 AC_PROG_CC
 AC_PROG_CC_C_O
 AC_PROG_RANLIB
+AC_COVERAGE
 
 AH_TOP([
 /* ea-php-cli - config.h / config.h.in          Copyright 2016 cPanel, Inc. */
@@ -46,6 +47,10 @@ AH_TOP([
 /* See the License for the specific language governing permissions and      */
 /* limitations under the License.                                           */
 ])
+
+echo $COVERAGE_CFLAGS
+echo $COVERAGE_OPTFLAGS
+echo $LCOV
 
 AC_CONFIG_FILES([
   Makefile
