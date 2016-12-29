@@ -5,9 +5,9 @@
 %define debug_package %{nil}
 
 Name:           %{ns_name}-%{upstream_name}
-Version:        0.1.0
+Version:        0.2.0
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 2
+%define release_prefix 1
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -64,6 +64,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Wed Dec 14 2016 Edwin Buck <e.buck@cpanel.net> - 0.2.0-1
+- EA-5741: Improve php-cli handling of paths.conf
+
 * Fri Sep 16 2016 Edwin Buck <e.buck@cpanel.net> - 0.1.0-2
 - EA-5212: Update license and copyright information
 

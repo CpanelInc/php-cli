@@ -124,5 +124,3 @@ void cli_config_load(struct cli_config* cli_config) {
   cli_config_read_cli_config(conf_file, 1024, cli_config);
 }
 
-void cli_config_get_php_bin(char* php_bin, size_t size, struct cli_config* cli_config) {
-}

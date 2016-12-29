@@ -3,6 +3,8 @@ Makefile
 Makefile.in
 *.a
 *.o
+*.gcno
+*.gcda
 php-cgi
 php-cli
 php-lightspeed

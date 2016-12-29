@@ -29,6 +29,7 @@
 #include "cli.h"
 #include "cli-config.h"
 #include "path.h"
+#include "paths-config.h"
 #include "php-cli.h"
 #include "strategy.h"
 
@@ -45,50 +46,6 @@ int file_exists(char* fname) {
         return 1;
     }
     return 0;
-}
-
-void load_paths_conf() {
-    char    *paths_conf = NULL;
-    key_pair_t      *paths_conf_head = NULL;
-
-/* TODO when this is put into the main repo:
- *   Add a comment in Cpanel::Config::Apache that if its logic changes to be sure
- *   to update <WHEREVER THIS LIVES IN /usr/local/cpanel HERE> accordingly also.
- */
-
-    paths_conf = get_string_copy("/etc/cpanel/ea4/paths.conf");
-    if (file_exists(paths_conf)) {
-        char    *ptr;
-
-        paths_conf_head = parse_conf_file (paths_conf);
-        ptr = get_value(paths_conf_head, "dir_conf");
-        if (ptr != NULL) {
-            strcpy(apache_conf_dir, ptr);
-        }
-    } else {
-      strncpy(apache_conf_dir, "/etc/apache2/conf.d", 1024);
-    }
-
-    return;
-}
-
-void set_defaults(struct cli_config* cli_config) {
-    /* ea_php_config doesn't exist, try the EA4 (11.54+) location */
-    if (cli_config->ea_php_config[0] == 0 && file_exists("/etc/cpanel/ea4/php.conf")) {
-        strncpy(cli_config->ea_php_config, "/etc/cpanel/ea4/php.conf", 1024);
-    }
-    /* Does 11.52 always have a paths.conf? */
-    /* ea_php_config still doesn't exist, try the 11.52 location */
-    if (cli_config->ea_php_config[0] == 0) {
-          load_paths_conf();
-          strncpy(cli_config->ea_php_config, apache_conf_dir, 1024);
-          /* on a default EA4 (11.60) resolves to /etc/apache2/conf.d/php.conf.yaml */
-          strncat(cli_config->ea_php_config, "/php.conf.yaml", 15);
-    }
-    /* no explicit lsphp_bin_pattern, set an EA4 default */
-    if (cli_config->lsphp_bin_pattern[0] == 0) {
-        strncpy(cli_config->lsphp_bin_pattern, "/opt/cpanel/ea-php%s/root/usr/bin/lsphp", 40);
-    }
 }
 
 char*   get_default_php_version(char* ea_php_config) {
@@ -124,11 +81,13 @@ void get_bin_php_default_pattern(char* buffer, size_t size) {
 }
 
 int main(int argc, char* argv[]) {
-    char              php_version[8] = { 0 };
-    char              php_file[1024] = { 0 };
-    char              php_bin[1024]  = { 0 };
-    struct cli_config cli_config;
-    int               has_verbose = 0;
+    char                php_version[8]      = { 0 };
+    char                php_file[1024]      = { 0 };
+    char                php_conf_file[1024] = { 0 };
+    char                php_bin[1024]       = { 0 };
+    struct cli_config   cli_config;
+    struct paths_config paths_config;
+    int                 has_verbose = 0;
 
     int     i;
     key_pair_t* command_line = NULL;
@@ -136,7 +95,8 @@ int main(int argc, char* argv[]) {
     char    **xargv;
 
     cli_config_load(&cli_config);
-    set_defaults(&cli_config);
+    paths_config_load(&paths_config);
+    strategy_get_php_conf_file(php_conf_file, 1024, &cli_config, &paths_config);
 
     /* all this goes in get_php_version */
     cli_get_php_version(php_version, 8, argv);
@@ -152,7 +112,7 @@ int main(int argc, char* argv[]) {
         if (php_version[0] != 0) {
             fprintf(stderr, "Configured PHP version %s not installed, using default PHP version\n", php_version);
         }
-        strncpy(php_version, get_default_php_version(cli_config.ea_php_config), 8);
+        strncpy(php_version, get_default_php_version(php_conf_file), 8);
         strategy_get_lsphp_bin(php_bin, 1024, &cli_config, php_version);
     }
     if (php_bin[0] == 0) {

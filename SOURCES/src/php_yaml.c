@@ -34,57 +34,11 @@ char* get_value (key_pair_t *next, char* key)
     return NULL;
 }
 
-int     istrstr (char *haystack, char *needle)
-{
-    char    uhaystack [1024];
-    char    uneedle [1024];
-
-    int     i, len, nlen;
-
-    len = strlen (needle);
-    nlen = len;
-    for (i = 0; i < len; ++i)
-    {
-        uneedle [i] = toupper (needle [i]);
-    }
-
-    uneedle [i] = 0;
-    
-    len = strlen (haystack);
-    for (i = 0; i < len; ++i)
-    {
-        uhaystack [i] = toupper (haystack [i]);
-    }
-
-    uhaystack [i] = 0;
-
-    for (i = 0; i < len; ++i)
-    {
-        if (!strncmp (uneedle, &uhaystack [i], nlen))
-        {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 char* get_string_copy (char* in)
 {
     int     len = strlen (in);
     char    *out = malloc (len + 1);
     strcpy (out, in);
-
-    return out;
-}
-
-char* get_concat_strings (char* a, char* b)
-{
-    int     len = strlen (a) + strlen (b);
-    char    *out = malloc (len + 1);
-
-    strcpy (out, a);
-    strcat (out, b);
 
     return out;
 }
@@ -183,64 +137,5 @@ void debug_print_pairs (key_pair_t *next)
     } 
 
     return;
-}
-
-key_pair_t*     parse_conf_file (char  *fname)
-{
-    FILE            *fh;
-    key_pair_t      *head = NULL;  
-    key_pair_t      *last = NULL;
-
-    char            buffer [1024];
-    char            key [1024];
-    char            value [1024];
-
-    int             i, len;
-
-    fh = fopen (fname, "r");
-    if (fh == NULL)
-        return NULL;
-
-    while (fgets (buffer, sizeof (buffer), fh))
-    {
-        /* chomp */
-        len = strlen (buffer);
-        if (buffer [len - 1] == '\n')
-            buffer [len - 1] = 0;
-
-        if (buffer [0] == '#')
-            continue;
-
-        /* search for = sign */
-
-        i = istrstr (buffer, "=");
-        if (i < 0)
-            continue;
-
-        strcpy (key, buffer);
-        key [i] = 0;
-
-        strcpy (value, &buffer [i + 1]);
-
-        if (last != NULL)
-        {
-            last->next = alloc_key_pair ();
-            last = last->next;
-        }
-        else
-        {
-            last = alloc_key_pair ();
-        }
-
-        if (head == NULL)
-            head = last;
-
-        last->key = get_string_copy (key);
-        last->value = get_string_copy (value);
-    }
-
-    fclose (fh);
-
-    return head;
 }
 

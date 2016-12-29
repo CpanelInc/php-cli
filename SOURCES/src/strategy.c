@@ -23,8 +23,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-
 #include <stdio.h>
+
+#include "paths-config.h"
 
 void strategy_get_php_bin(char* buffer, size_t size,
                  struct cli_config* cli_config, char* php_version) {
@@ -52,6 +53,7 @@ void strategy_get_lsphp_bin(char* buffer, size_t size,
                    struct cli_config* cli_config, char* php_version) {
     char        default_pattern[1024] = { 0 };
     struct stat path_stat;
+
     memset(buffer, 0, size);
     if (cli_config == 0 || php_version == 0 || php_version[0] == 0) {
         return;
@@ -69,4 +71,25 @@ void strategy_get_lsphp_bin(char* buffer, size_t size,
         access(buffer, X_OK) != 0) {
       memset(buffer, 0, size);
     }
+}
+
+void strategy_get_php_conf_file(char* buffer, size_t size,
+                                struct cli_config* cli_config, 
+                                struct paths_config* paths_config) {
+    struct stat file_stat;
+
+    memset(buffer, 0, size);
+    if (cli_config == 0 || paths_config == 0 ) {
+        return;
+    }
+    if (cli_config->ea_php_config[0] != 0) {
+        strncpy(buffer, cli_config->ea_php_config, size);
+    } else if (stat("/etc/cpanel/ea4/php.conf", &file_stat) == 0 &&
+               S_ISREG(file_stat.st_mode) != 0 &&
+               access("/etc/cpanel/ea4/php.conf", R_OK) == 0) {
+        strncpy(buffer, "/etc/cpanel/ea4/php.conf", size);
+    } else {
+        snprintf(buffer, size, "%s/php.conf.yaml", paths_config->dir_conf);
+    }
+    return;
 }
