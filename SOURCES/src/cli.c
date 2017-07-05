@@ -1,4 +1,4 @@
-/* ea-php-cli - src/cli.c                       Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - src/cli.c                       Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -25,8 +25,8 @@
 
 #include <stdio.h>
 
-/** Copies the php_version into buf if specified in the command line */
-void cli_get_php_version(char* buf, size_t size, char** argv) {
+/** Copies the php_package into buf if specified in the command line */
+void cli_get_php_package(char* buf, size_t size, char** argv) {
     memset(buf, 0, size);
     if (argv == 0) {
         return;

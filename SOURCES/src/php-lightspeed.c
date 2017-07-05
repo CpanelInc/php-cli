@@ -1,4 +1,4 @@
-/* ea-php-cli - src/php-lightspeed.c            Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - src/php-lightspeed.c            Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -48,10 +48,9 @@ int file_exists(char* fname) {
     return 0;
 }
 
-char*   get_default_php_version(char* ea_php_config) {
-    char*       php_version_string = NULL;
+char*   get_default_php_package(char* ea_php_config) {
+    char*       php_package_string = NULL;
     key_pair_t* php_config_head = NULL;
-    int         len;
 
     if (!file_exists (ea_php_config)) {
         fprintf( stderr, "EasyApache PHP config file not found: %s\n", ea_php_config);
@@ -60,28 +59,25 @@ char*   get_default_php_version(char* ea_php_config) {
 
     php_config_head = parse_yaml_file (ea_php_config);
 
-    php_version_string = get_value (php_config_head, "default"); /* cpanel 11.54+ key */
-    if (!php_version_string) {
-        php_version_string = get_value (php_config_head, "phpversion"); /* cpanel 11.52 key */
+    php_package_string = get_value (php_config_head, "default"); /* cpanel 11.54+ key */
+    if (!php_package_string) {
+        php_package_string = get_value (php_config_head, "phpversion"); /* cpanel 11.52 key */
     }
 
-    /* last 2 chars are the version number */
-
-    if (php_version_string == NULL) {
+    if (php_package_string == NULL) {
         fputs ("Default PHP not defined in EasyApache configuration file\n", stderr);
         exit (1);
     }
 
-    len = strlen (php_version_string);
-    return &php_version_string [len - 2];
+    return php_package_string;
 }
 
 void get_bin_php_default_pattern(char* buffer, size_t size) {
-    strncpy(buffer, "/opt/cpanel/ea-php%s/root/usr/bin/lsphp", size);
+    strncpy(buffer, "%s/%s/root/usr/bin/lsphp", size);
 }
 
 int main(int argc, char* argv[]) {
-    char                php_version[8]      = { 0 };
+    char                php_package[20]     = { 0 };
     char                php_file[1024]      = { 0 };
     char                php_conf_file[1024] = { 0 };
     char                php_bin[1024]       = { 0 };
@@ -98,25 +94,25 @@ int main(int argc, char* argv[]) {
     paths_config_load(&paths_config);
     strategy_get_php_conf_file(php_conf_file, 1024, &cli_config, &paths_config);
 
-    /* all this goes in get_php_version */
-    cli_get_php_version(php_version, 8, argv);
-    if (php_version[0] == 0) {
+    /* all this goes in get_php_package */
+    cli_get_php_package(php_package, 20, argv);
+    if (php_package[0] == 0) {
       cli_get_last_file(php_file, 1024, argv);
       if (php_file[0] == 0) {
           strncpy(php_file, "fake.php", 1024);
       }
-      path_get_htaccess_php_version(php_version, 8, php_file, 1024);
+      path_get_htaccess_php_package(php_package, 20, php_file, 1024);
     }
-    strategy_get_lsphp_bin(php_bin, 1024, &cli_config, php_version);
+    strategy_get_lsphp_bin(php_bin, 1024, &cli_config, php_package);
     if (php_bin[0] == 0) {
-        if (php_version[0] != 0) {
-            fprintf(stderr, "Configured PHP version %s not installed, using default PHP version\n", php_version);
+        if (php_package[0] != 0) {
+            fprintf(stderr, "Configured PHP version %s does not have an LS binary installed, using default PHP version\n", php_package);
         }
-        strncpy(php_version, get_default_php_version(php_conf_file), 8);
-        strategy_get_lsphp_bin(php_bin, 1024, &cli_config, php_version);
+        strncpy(php_package, get_default_php_package(php_conf_file), 20);
+        strategy_get_lsphp_bin(php_bin, 1024, &cli_config, php_package);
     }
     if (php_bin[0] == 0) {
-        fprintf(stderr, "Default PHP version %s not installed, exiting\n", php_version);
+        fprintf(stderr, "Default PHP version %s does not have an LS binary installed, exiting\n", php_package);
     }
 
     /* now process command line parameters */
@@ -164,13 +160,12 @@ int main(int argc, char* argv[]) {
 
     cli_get_verbose(&has_verbose, xargv);
     if (has_verbose) {
-       printf("ea-php-cli Copyright 2016 cPanel, Inc.\n");
+       printf("ea-php-cli Copyright 2017 cPanel, Inc.\n");
     }
     i = execv (&php_bin [0], xargv);
-    printf ("php_litespeed unable to execute php :%d: (%d) :%s:\n", i, errno, strerror (errno));
+    printf ("php_lightspeed unable to execute php :%d: (%d) :%s:\n", i, errno, strerror (errno));
     printf ("when attempting to run (%s)\n", &php_bin [0]);
 
     return (0);
 }
-
 

@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/htaccess_get_php_version_from_file_003.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/htaccess_get_php_package_from_file_007.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -22,65 +22,69 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <errno.h>
 #include "cli.h"
 #include "htaccess.h"
 
-/* act like the path does not exist */
+/* act like the path exists, and is a file */
 int __wrap___xstat(int ver, const char* path, struct stat* buf) {
-   return -1;
-}
-
-int unauthorized_call_fopen = 0;
-
-FILE* __wrap_fopen(const char* path, const char* mode) {
-  unauthorized_call_fopen = 1;
-  return 0;
-}
-
-int unauthorized_call_fgets = 0;
-
-char* __wrap_fgets(char* buf, int size, FILE* file) {
-    unauthorized_call_fgets = 1;
+    buf->st_mode = S_IFREG;
     return 0;
 }
 
-int unauthorized_call_fclose = 0;
+int fopen_called = 0;
+
+/* act like the file can be opened */
+FILE* __wrap_fopen(const char* path, const char* mode) {
+    fopen_called = 1;
+    return (FILE*)5;
+}
+
+int fgets_call_count = 0;
+
+/* but the file is empty */
+char* __wrap_fgets(char* buf, int size, FILE* file) {
+    fgets_call_count++;
+    return 0;
+}
+
+int fclose_called = 0;
 
 int __wrap_fclose(FILE* file) {
-    unauthorized_call_fclose = 1;
+    fclose_called = 1;
     return 0;
 }
 
 int main(int argc, char** argv) {
-  char testcase[1024] = "/does/not/exist/.htaccess";
+  char testcase[1024] = "/some/path/.htaccess";
   char version[8] = "junk";
 
-  printf("testing htaccess_get_php_version_from_file on empty string\n");
-  printf("  calling htaccess_get_php_version_from_file(\"%s\", %d, \"%s\", %d)\n",
+  char expected_fgets_call_count = 1;
+
+  printf("testing htaccess_get_php_package_from_file on empty regular file\n");
+  printf("  calling htaccess_get_php_package_from_file(\"%s\", %d, \"%s\", %d)\n",
          version, 8, testcase, 1024);
-  htaccess_get_php_version_from_file(version, 8, testcase, 1024);
+  htaccess_get_php_package_from_file(version, 8, testcase, 1024);
 
-  if (unauthorized_call_fopen) {
-    printf("ERROR: attempt to open directory occurred\n");
+  if (fopen_called == 0) {
+    printf("ERROR: no attempt to open file\n");
     return 1;
   } else {
-    printf("  fopen not called\n");
+    printf("  fopen called\n");
   }
 
-  if (unauthorized_call_fgets) {
-    printf("ERROR: attempt to read from directory occurred\n");
+  if (fgets_call_count != expected_fgets_call_count) {
+    printf("ERROR: fgets called %d times, expected %d\n", fgets_call_count, expected_fgets_call_count);
     return 1;
   } else {
-    printf("  fgets not called\n");
+    printf("  fgets call count is correct\n");
   }
 
-  if (unauthorized_call_fclose) {
-    printf("ERROR: attempt to close file occurred\n");                         
+  if (fclose_called == 0) {                                              
+    printf("ERROR: no attempt to close file\n");                         
     return 1;                                                           
   } else {                                                              
-    printf("  fclose not called\n");                                         
-  }
+    printf("  fclose called\n");                                         
+  }  
 
   if (strnlen(version, 8) != 0) {
     printf("ERROR: version \"%s\" is not empty\n", version);

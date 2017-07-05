@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/path_get_htaccess_php_version_009.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/path_get_htaccess_php_package_006.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -26,14 +26,11 @@
 
 int get_from_file_call_count = 0;
 
-void __wrap_htaccess_get_php_version_from_file(char* buf, size_t size, char* path, size_t path_size) {
+void __wrap_htaccess_get_php_package_from_file(char* buf, size_t size, char* path, size_t path_size) {
    get_from_file_call_count++;
    memset(buf, 0, size);
-   if (strncmp(path, "/a/.htaccess", path_size) == 0) {
+   if (strncmp(path, "/.htaccess", path_size) == 0) {
      strncpy(buf, "56", size);
-   }
-   if (strncmp(path, "/a/deep/.htaccess", path_size) == 0) {
-     strncpy(buf, "70", size);
    }
 }
 
@@ -41,20 +38,20 @@ int main(int argc, char** argv) {
   char  testcase[1024] = "/a/deep/test/test.php";
   char  version[8] = "junk";
 
-  char  expected_version[8] = "70";
-  int   expected_get_from_file_call_count = 2;
+  char  expected_version[8] = "56";
+  int   expected_get_from_file_call_count = 4;
 
-  printf("testing path_get_htaccess_php_version with php version 56 in /a/.htaccess path and php verison 70 in /a/deep/.htaccess access path for \"%s\"\n", testcase);
+  printf("testing path_get_htaccess_php_package with php version 56 in /.htaccess path for \"%s\"\n", testcase);
 
-  printf("  calling function path_get_htaccess_php_version(\"%s\", %d, \"%s\", %d)\n", version, 8, testcase, 1024);
-  path_get_htaccess_php_version(version, 8, testcase, 1024);
+  printf("  calling function path_get_htaccess_php_package(\"%s\", %d, \"%s\", %d)\n", version, 8, testcase, 1024);
+  path_get_htaccess_php_package(version, 8, testcase, 1024);
 
   if (get_from_file_call_count != expected_get_from_file_call_count) {
-    printf("ERROR: htaccess_get_php_version_from_file called %d times, expected %d\n",
+    printf("ERROR: htaccess_get_php_package_from_file called %d times, expected %d\n",
            get_from_file_call_count, expected_get_from_file_call_count);
     return 1;
   } else {
-    printf("  htaccess_get_php_version_from_file call count is correct\n");
+    printf("  htaccess_get_php_package_from_file call count is correct\n");
   }
 
   if (strnlen(version, 8) == 0 ||                                       

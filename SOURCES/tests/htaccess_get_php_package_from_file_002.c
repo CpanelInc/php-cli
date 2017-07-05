@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/htaccess_get_php_version_from_file_005.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/htaccess_get_php_package_from_file_002.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -25,11 +25,11 @@
 #include "cli.h"
 #include "htaccess.h"
 
+int unauthorized_call__xstat = 0;
 
-/* Act like the path exists, but is a directory */
 int __wrap___xstat(int ver, const char* path, struct stat* buf) {
-    buf->st_mode = S_IFDIR;
-    return 0;
+   unauthorized_call__xstat = 1;
+   return -1;
 }
 
 int unauthorized_call_fopen = 0;
@@ -54,13 +54,19 @@ int __wrap_fclose(FILE* file) {
 }
 
 int main(int argc, char** argv) {
-  char testcase[1024] = "/some/path/.htaccess";
+  char testcase[1024] = "";
   char version[8] = "junk";
 
-  printf("testing htaccess_get_php_version_from_file on a directory\n");
-  printf("  calling htaccess_get_php_version_from_file(\"%s\", %d, \"%s\", %d)\n",
-         version, 8, testcase, 1024);
-  htaccess_get_php_version_from_file(version, 8, testcase, 1024);
+  printf("testing htaccess_get_php_package_from_file on empty string\n");
+  printf("  calling htaccess_get_php_package_from_file(\"%s\", %d, \"%s\", %d)\n", version, 8, testcase, 1024);
+  htaccess_get_php_package_from_file(version, 8, testcase, 1024);
+
+  if (unauthorized_call__xstat) {
+    printf("ERROR: attempt to lookup path occurred\n");
+    return 1;
+  } else {
+    printf("  stat not called\n");
+  }
 
   if (unauthorized_call_fopen) {
     printf("ERROR: attempt to open directory occurred\n");
@@ -93,4 +99,3 @@ int main(int argc, char** argv) {
   printf("test complete\n");
   return 0;
 }
-
