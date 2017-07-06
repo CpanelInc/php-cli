@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/htaccess_get_php_version_from_file_008.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/htaccess_get_php_package_from_file_004.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -26,6 +26,8 @@
 #include "htaccess.h"
 
 /* act like the path exists */
+int xstat_called = 0;
+
 int __wrap___xstat(int ver, const char* path, struct stat* buf) {
     buf->st_mode = S_IFREG;
     return 0;
@@ -43,10 +45,8 @@ int fgets_call_count = 0;
 /* file contains an AddType directive */
 char* __wrap_fgets(char* buf, int size, FILE* file) {
     char* file_contents[] = {
-        "one",
-        "two",
-        "AddType application/x-httpd-ea-php70 .php .php5 .php6 .php7",
-        "four"
+        "AddType application/x-httpd-yyy-php32 .php .php5 .php5 .php3",
+        "two"
     };
 
     fgets_call_count++;
@@ -60,7 +60,6 @@ char* __wrap_fgets(char* buf, int size, FILE* file) {
 
 int fclose_called = 0;
 
-/* */
 int __wrap_fclose(FILE* file) {
     fclose_called = 1;
     return 0;
@@ -70,13 +69,13 @@ int main(int argc, char** argv) {
   char testcase[1024] = "/some/path/.htaccess";
   char version[8] = "junk";
 
-  char expected_version[8] = "70";
-  char expected_fgets_call_count = 3;
+  char expected_version[8] = "yyy-php32";
+  char expected_fgets_call_count = 1;
 
-  printf("testing htaccess_get_php_version_from_file on regular file\n");
-  printf("  calling htaccess_get_php_version_from_file(\"%s\", %d, \"%s\", %d)\n",
+  printf("testing htaccess_get_php_package_from_file on regular file\n");
+  printf("  calling htaccess_get_php_package_from_file(\"%s\", %d, \"%s\", %d)\n",
          version, 8, testcase, 1024);
-  htaccess_get_php_version_from_file(version, 8, testcase, 1024);
+  htaccess_get_php_package_from_file(version, 8, testcase, 1024);
 
   if (fopen_called == 0) {                                              
     printf("ERROR: no attempt to open file\n");                         

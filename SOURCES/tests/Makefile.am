@@ -1,4 +1,4 @@
-## ea-php-cli - tests/Makefile.am            Copyright 2016 cPanel, Inc.
+## ea-php-cli - tests/Makefile.am            Copyright 2017 cPanel, Inc.
 ##                                                  All rights Reserved.
 ## copyright@cpanel.net                                http://cpanel.net
 ##
@@ -20,11 +20,11 @@ AM_CFLAGS = -I$(top_srcdir)/include
 LDADD = ../src/libphpcli.a
 
 TEST_CASES = \
-cli_get_php_version_001 \
-cli_get_php_version_002 \
-cli_get_php_version_003 \
-cli_get_php_version_004 \
-cli_get_php_version_005 \
+cli_get_php_package_001 \
+cli_get_php_package_002 \
+cli_get_php_package_003 \
+cli_get_php_package_004 \
+cli_get_php_package_005 \
 cli_get_last_file_001 \
 cli_get_last_file_002 \
 cli_get_last_file_003 \
@@ -54,14 +54,14 @@ cli_config_read_cli_config_011 \
 cli_config_read_cli_config_012 \
 cli_config_read_cli_config_013 \
 cli_config_read_cli_config_014 \
-htaccess_get_php_version_from_file_001 \
-htaccess_get_php_version_from_file_002 \
-htaccess_get_php_version_from_file_003 \
-htaccess_get_php_version_from_file_004 \
-htaccess_get_php_version_from_file_005 \
-htaccess_get_php_version_from_file_006 \
-htaccess_get_php_version_from_file_007 \
-htaccess_get_php_version_from_file_008 \
+htaccess_get_php_package_from_file_001 \
+htaccess_get_php_package_from_file_002 \
+htaccess_get_php_package_from_file_003 \
+htaccess_get_php_package_from_file_004 \
+htaccess_get_php_package_from_file_005 \
+htaccess_get_php_package_from_file_006 \
+htaccess_get_php_package_from_file_007 \
+htaccess_get_php_package_from_file_008 \
 path_basedir_001 \
 path_basedir_002 \
 path_basedir_003 \
@@ -73,15 +73,15 @@ path_php_cli_yaml_002 \
 path_php_cli_yaml_003 \
 path_php_cli_yaml_004 \
 path_php_cli_yaml_005 \
-path_get_htaccess_php_version_001 \
-path_get_htaccess_php_version_002 \
-path_get_htaccess_php_version_003 \
-path_get_htaccess_php_version_004 \
-path_get_htaccess_php_version_005 \
-path_get_htaccess_php_version_006 \
-path_get_htaccess_php_version_007 \
-path_get_htaccess_php_version_008 \
-path_get_htaccess_php_version_009 \
+path_get_htaccess_php_package_001 \
+path_get_htaccess_php_package_002 \
+path_get_htaccess_php_package_003 \
+path_get_htaccess_php_package_004 \
+path_get_htaccess_php_package_005 \
+path_get_htaccess_php_package_006 \
+path_get_htaccess_php_package_007 \
+path_get_htaccess_php_package_008 \
+path_get_htaccess_php_package_009 \
 paths_config_read_paths_config_001 \
 paths_config_read_paths_config_002 \
 paths_config_read_paths_config_003 \
@@ -167,14 +167,14 @@ cli_get_last_file_004_LDFLAGS   = -Wl,--wrap=access
 cli_get_last_file_005_LDFLAGS   = -Wl,--wrap=access
 cli_get_last_file_006_LDFLAGS   = -Wl,--wrap=access
 cli_get_last_file_007_LDFLAGS   = -Wl,--wrap=access
-htaccess_get_php_version_from_file_001_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
-htaccess_get_php_version_from_file_002_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
-htaccess_get_php_version_from_file_003_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
-htaccess_get_php_version_from_file_004_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
-htaccess_get_php_version_from_file_005_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
-htaccess_get_php_version_from_file_006_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
-htaccess_get_php_version_from_file_007_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
-htaccess_get_php_version_from_file_008_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_001_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_002_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_003_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_004_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_005_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_006_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_007_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
+htaccess_get_php_package_from_file_008_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fgets,--wrap=fclose
 path_basedir_001_LDFLAGS        = -Wl,--wrap=getcwd
 path_basedir_002_LDFLAGS        = -Wl,--wrap=getcwd
 path_basedir_003_LDFLAGS        = -Wl,--wrap=getcwd
@@ -184,15 +184,15 @@ path_php_cli_yaml_002_LDFLAGS   = -Wl,--wrap=readlink
 path_php_cli_yaml_003_LDFLAGS   = -Wl,--wrap=readlink
 path_php_cli_yaml_004_LDFLAGS   = -Wl,--wrap=readlink
 path_php_cli_yaml_005_LDFLAGS   = -Wl,--wrap=readlink
-path_get_htaccess_php_version_001_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_002_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_003_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_004_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_005_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_006_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_007_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_008_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
-path_get_htaccess_php_version_009_LDFLAGS = -Wl,--wrap=htaccess_get_php_version_from_file
+path_get_htaccess_php_package_001_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_002_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_003_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_004_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_005_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_006_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_007_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_008_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
+path_get_htaccess_php_package_009_LDFLAGS = -Wl,--wrap=htaccess_get_php_package_from_file
 paths_config_read_paths_config_001_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
 paths_config_read_paths_config_002_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose
 paths_config_read_paths_config_003_LDFLAGS = -Wl,--wrap=__xstat,--wrap=fopen,--wrap=fclose

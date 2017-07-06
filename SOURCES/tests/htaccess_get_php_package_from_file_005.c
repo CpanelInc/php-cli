@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/htaccess_get_php_version_from_file_001.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/htaccess_get_php_package_from_file_005.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -25,11 +25,11 @@
 #include "cli.h"
 #include "htaccess.h"
 
-int unauthorized_call__xstat = 0;
 
+/* Act like the path exists, but is a directory */
 int __wrap___xstat(int ver, const char* path, struct stat* buf) {
-   unauthorized_call__xstat = 1;
-   return -1;
+    buf->st_mode = S_IFDIR;
+    return 0;
 }
 
 int unauthorized_call_fopen = 0;
@@ -54,19 +54,13 @@ int __wrap_fclose(FILE* file) {
 }
 
 int main(int argc, char** argv) {
-  char* testcase = 0;
+  char testcase[1024] = "/some/path/.htaccess";
   char version[8] = "junk";
 
-  printf("testing htaccess_get_php_version_from_file on null pointer\n");
-  printf("  calling htaccess_get_php_version_from_file(\"%s\", %d, %s, %d)\n", version, 8, testcase, 0);
-  htaccess_get_php_version_from_file(version, 8, testcase, 0);
-
-  if (unauthorized_call__xstat) {
-    printf("ERROR: attempt to lookup path occurred\n");
-    return 1;
-  } else {
-    printf("  stat not called\n");
-  }
+  printf("testing htaccess_get_php_package_from_file on a directory\n");
+  printf("  calling htaccess_get_php_package_from_file(\"%s\", %d, \"%s\", %d)\n",
+         version, 8, testcase, 1024);
+  htaccess_get_php_package_from_file(version, 8, testcase, 1024);
 
   if (unauthorized_call_fopen) {
     printf("ERROR: attempt to open directory occurred\n");
@@ -83,11 +77,11 @@ int main(int argc, char** argv) {
   }
 
   if (unauthorized_call_fclose) {
-    printf("ERROR: attempt to close file occurred\n");
+    printf("ERROR: attempt to close file occurred\n");                         
     return 1;                                                           
   } else {                                                              
-    printf("  fclose not called\n");
-  }  
+    printf("  fclose not called\n");                                         
+  }
 
   if (strnlen(version, 8) != 0) {
     printf("ERROR: version %s is not empty\n", version);
@@ -99,3 +93,4 @@ int main(int argc, char** argv) {
   printf("test complete\n");
   return 0;
 }
+

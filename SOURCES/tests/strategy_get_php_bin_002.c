@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/strategy_get_php_bin_002.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/strategy_get_php_bin_002.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -28,17 +28,17 @@ int get_bin_php_default_pattern_called = 0;
 
 void get_bin_php_default_pattern(char* buffer, size_t size) {
    get_bin_php_default_pattern_called = 1;
-   strncpy(buffer, "/my/alternate/%s/bin/php", size);
+   strncpy(buffer, "/my/alternate/%s/%s/bin/php", size);
 }
 
 int main(int argc, char** argv) {
   struct cli_config cli_config;
-  char* php_version = 0;
+  char php_package[20] = "";
   char php_bin[1024] = "junk";
 
   printf("testing strategy_get_php_bin on null version\n");
-  printf("  calling strategy_get_php_bin(\"%s\", %d, &(cli_config), %s)\n", php_bin, 1024, php_version);
-  strategy_get_php_bin(php_bin, 1024, &cli_config, php_version);
+  printf("  calling strategy_get_php_bin(\"%s\", %d, &(cli_config), %s)\n", php_bin, 1024, php_package);
+  strategy_get_php_bin(php_bin, 1024, &cli_config, php_package);
 
   if (get_bin_php_default_pattern_called) {
     printf("ERROR: get_bin_php_default_pattern was called\n");

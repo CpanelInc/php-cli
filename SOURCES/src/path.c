@@ -1,4 +1,4 @@
-/* ea-php-cli - src/path.c                      Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - src/path.c                      Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -84,7 +84,7 @@ char* path_php_cli_yaml(char* buf, size_t size) {
    return buf;
 }
 
-void path_get_htaccess_php_version(char* buf, size_t size, char* path, size_t path_size) {
+void path_get_htaccess_php_package(char* buf, size_t size, char* path, size_t path_size) {
    char* basedir       = 0;
    char* htaccess_file = 0;
 
@@ -98,7 +98,7 @@ void path_get_htaccess_php_version(char* buf, size_t size, char* path, size_t pa
 
    strncpy(htaccess_file, basedir, path_size);
    strncat(htaccess_file, ".htaccess", 12);
-   htaccess_get_php_version_from_file(buf, size, htaccess_file, path_size);
+   htaccess_get_php_package_from_file(buf, size, htaccess_file, path_size);
 
    while (strncmp(basedir, "/", 2) != 0 && strnlen(buf, size) == 0 ) {
      basedir[strnlen(basedir, path_size)-1] = 0; /* trim "/" */
@@ -108,7 +108,7 @@ void path_get_htaccess_php_version(char* buf, size_t size, char* path, size_t pa
 
      strncpy(htaccess_file, basedir, strlen(path+1));
      strncat(htaccess_file, ".htaccess", 12);
-     htaccess_get_php_version_from_file(buf, size, htaccess_file, path_size);
+     htaccess_get_php_package_from_file(buf, size, htaccess_file, path_size);
    }
 
    free(basedir);

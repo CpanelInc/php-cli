@@ -1,4 +1,4 @@
-/* ea-php-cli - src/htaccess.c                  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - src/htaccess.c                  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -25,12 +25,12 @@
 #include "htaccess.h"
 
 /* fetches the php version from an htaccess file */
-void htaccess_get_php_version_from_file(char* buf, size_t size, char* path, size_t path_size) {
+void htaccess_get_php_package_from_file(char* buf, size_t size, char* path, size_t path_size) {
    struct stat path_stat;
    FILE*       fin;
    char        line[1024];
    char*       position;
-   char*       add_type_line = "AddType application/x-httpd-ea-php";
+   char*       add_type_line = "AddType application/x-httpd-";
 
    memset(buf, 0, size);
    if (path == 0 || path[0] == 0 ) {
@@ -39,12 +39,14 @@ void htaccess_get_php_version_from_file(char* buf, size_t size, char* path, size
    /* check if not a file */
    if (stat(path, &path_stat) != 0 || S_ISREG(path_stat.st_mode) == 0) {
      return;
-   } 
+   }
    fin = fopen(path, "r");
    if (fin) {
        while  (buf[0] == 0 && fgets(line, 1024, fin) != NULL) {
            if ((position = strstr(line, add_type_line)) != 0) {
-               strncpy(buf, position+strlen(add_type_line), 2);
+               strncpy(buf, position+strlen(add_type_line), size); // grab the package an everythign after it up to `size` (i.e. 20)
+               strtok(buf, " "); // strip of the space and everything after it
+               strtok(buf, "___"); // Look for '3 underscores' at https://cpanel.wiki/display/EA/Adding+a+PHP+Handler for more details
            }
        }
        fclose(fin);

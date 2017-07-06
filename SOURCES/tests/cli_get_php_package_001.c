@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/cli_get_php_version_004.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/cli_get_php_package_001.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -24,25 +24,18 @@
 #include "cli.h"
 
 int main(int argc, char** argv) {
-  char* testcase[] = { "-ea_php", "70", 0 };
+  char** testcase = 0;
   char version[8] = "junk";
 
-  char* expected_version = "70";
+  printf("testing cli_get_php_package on null pointer\n");
+  printf("  calling cli_get_php_package(\"%s\", %d, (null))\n", version, 8);
+  cli_get_php_package(version, 8, testcase);
 
-  printf("testing cli_get_php_version on \"-ea_php 70\"\n");
-  printf("  calling cli_get_php_version(\"%s\", %d, @{\"-ea_php\", \"70\", 0})\n",
-         version, 8);
-
-  cli_get_php_version(version, 8, testcase);
-
-  if (strnlen(version, 8) == 0 || 
-      strncmp(expected_version, version, 8) != 0) {
-    printf("ERROR: version \"%s\" is not \"%s\"\n", 
-           version, expected_version);
+  if (strnlen(version, 8) != 0) {
+    printf("ERROR: version %s is not empty\n", version);
     return 1;
   } else {
-    printf("  version \"%s\" is \"%s\"\n", 
-           version, expected_version);
+    printf("  version \"%s\" is empty\n", version);
   }
 
   printf("test complete\n");

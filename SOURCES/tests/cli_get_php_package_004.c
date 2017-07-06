@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/cli_get_php_version_003.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/cli_get_php_package_004.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -24,16 +24,16 @@
 #include "cli.h"
 
 int main(int argc, char** argv) {
-  char* testcase[] = { "-ea_php", "54", 0 };
+  char* testcase[] = { "-ea_php", "70", 0 };
   char version[8] = "junk";
 
-  char* expected_version = "54";
+  char* expected_version = "70";
 
-  printf("testing cli_get_php_version on \"-ea_php 54\"\n");
-  printf("  calling cli_get_php_version(\"%s\", %d, @{\"-ea_php\", \"54\", 0})\n",
+  printf("testing cli_get_php_package on \"-ea_php 70\"\n");
+  printf("  calling cli_get_php_package(\"%s\", %d, @{\"-ea_php\", \"70\", 0})\n",
          version, 8);
 
-  cli_get_php_version(version, 8, testcase);
+  cli_get_php_package(version, 8, testcase);
 
   if (strnlen(version, 8) == 0 || 
       strncmp(expected_version, version, 8) != 0) {

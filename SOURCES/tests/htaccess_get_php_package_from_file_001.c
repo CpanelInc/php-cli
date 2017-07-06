@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/htaccess_get_php_version_from_file_006.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/htaccess_get_php_package_from_file_001.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -25,18 +25,18 @@
 #include "cli.h"
 #include "htaccess.h"
 
-/* act like the path exists, and is a regular file */
+int unauthorized_call__xstat = 0;
+
 int __wrap___xstat(int ver, const char* path, struct stat* buf) {
-    buf->st_mode = S_IFREG;
-    return 0;
+   unauthorized_call__xstat = 1;
+   return -1;
 }
 
-int fopen_called = 0;
+int unauthorized_call_fopen = 0;
 
-/* but the file cannot be opened */
 FILE* __wrap_fopen(const char* path, const char* mode) {
-    fopen_called = 1;
-    return (FILE*)0;
+  unauthorized_call_fopen = 1;
+  return 0;
 }
 
 int unauthorized_call_fgets = 0;
@@ -54,18 +54,25 @@ int __wrap_fclose(FILE* file) {
 }
 
 int main(int argc, char** argv) {
-  char testcase[1024] = "/some/path/.htaccess";
+  char* testcase = 0;
   char version[8] = "junk";
 
-  printf("testing htaccess_get_php_version_from_file on regular file that cannot be opened\n");
-  printf("  calling htaccess_get_php_version_from_file(\"%s\", %d, \"%s\", %d)\n",
-         version, 8, testcase, 1024);
-  htaccess_get_php_version_from_file(version, 8, testcase, 1024);
+  printf("testing htaccess_get_php_package_from_file on null pointer\n");
+  printf("  calling htaccess_get_php_package_from_file(\"%s\", %d, %s, %d)\n", version, 8, testcase, 0);
+  htaccess_get_php_package_from_file(version, 8, testcase, 0);
 
-  if (fopen_called == 0) {
-    printf("ERROR: no attempt to open file\n");
+  if (unauthorized_call__xstat) {
+    printf("ERROR: attempt to lookup path occurred\n");
+    return 1;
   } else {
-    printf("  fopen called\n");
+    printf("  stat not called\n");
+  }
+
+  if (unauthorized_call_fopen) {
+    printf("ERROR: attempt to open directory occurred\n");
+    return 1;
+  } else {
+    printf("  fopen not called\n");
   }
 
   if (unauthorized_call_fgets) {
@@ -76,11 +83,11 @@ int main(int argc, char** argv) {
   }
 
   if (unauthorized_call_fclose) {
-    printf("ERROR: attempt to close file occurred\n");                         
+    printf("ERROR: attempt to close file occurred\n");
     return 1;                                                           
   } else {                                                              
-    printf("  fclose not called\n");                                         
-  }
+    printf("  fclose not called\n");
+  }  
 
   if (strnlen(version, 8) != 0) {
     printf("ERROR: version %s is not empty\n", version);

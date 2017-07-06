@@ -1,4 +1,4 @@
-/* ea-php-cli - include/cli.h                   Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - include/cli.h                   Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -19,7 +19,7 @@
 
 #include <unistd.h>
 
-void cli_get_php_version(char* buf, size_t size, char** argv);
+void cli_get_php_package(char* buf, size_t size, char** argv);
 void cli_get_last_file(char* buf, size_t size, char** argv);
 int  cli_get_verbose(int* buf, char** argv);
 

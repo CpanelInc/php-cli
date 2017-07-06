@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/htaccess_get_php_version_from_file_002.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/htaccess_get_php_package_from_file_003.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -22,13 +22,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <errno.h>
 #include "cli.h"
 #include "htaccess.h"
 
-int unauthorized_call__xstat = 0;
-
+/* act like the path does not exist */
 int __wrap___xstat(int ver, const char* path, struct stat* buf) {
-   unauthorized_call__xstat = 1;
    return -1;
 }
 
@@ -54,19 +53,13 @@ int __wrap_fclose(FILE* file) {
 }
 
 int main(int argc, char** argv) {
-  char testcase[1024] = "";
+  char testcase[1024] = "/does/not/exist/.htaccess";
   char version[8] = "junk";
 
-  printf("testing htaccess_get_php_version_from_file on empty string\n");
-  printf("  calling htaccess_get_php_version_from_file(\"%s\", %d, \"%s\", %d)\n", version, 8, testcase, 1024);
-  htaccess_get_php_version_from_file(version, 8, testcase, 1024);
-
-  if (unauthorized_call__xstat) {
-    printf("ERROR: attempt to lookup path occurred\n");
-    return 1;
-  } else {
-    printf("  stat not called\n");
-  }
+  printf("testing htaccess_get_php_package_from_file on empty string\n");
+  printf("  calling htaccess_get_php_package_from_file(\"%s\", %d, \"%s\", %d)\n",
+         version, 8, testcase, 1024);
+  htaccess_get_php_package_from_file(version, 8, testcase, 1024);
 
   if (unauthorized_call_fopen) {
     printf("ERROR: attempt to open directory occurred\n");
@@ -90,7 +83,7 @@ int main(int argc, char** argv) {
   }
 
   if (strnlen(version, 8) != 0) {
-    printf("ERROR: version %s is not empty\n", version);
+    printf("ERROR: version \"%s\" is not empty\n", version);
     return 1;
   } else {
     printf("  version \"%s\" is empty\n", version);
