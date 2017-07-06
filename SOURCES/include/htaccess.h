@@ -1,4 +1,4 @@
-/* ea-php-cli - include/htaccess.h              Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - include/htaccess.h              Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 /* fetches the php version from an htaccess file */
-void htaccess_get_php_version_from_file(char* buf, size_t size,
+void htaccess_get_php_package_from_file(char* buf, size_t size,
                                         char* path, size_t path_size);
 
 #endif /* HTACCESS_H */

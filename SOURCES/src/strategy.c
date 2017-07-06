@@ -1,4 +1,4 @@
-/* ea-php-cli - src/strategy.c                  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - src/strategy.c                  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -19,6 +19,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include "strategy.h"
+char TEST_SCL_PREFIX[255];
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -27,20 +28,54 @@
 
 #include "paths-config.h"
 
+#define MAXPATH 1024
+
+void strategy_get_scl_prefix_for_package(char **scl_prefix, char* php_package)
+{
+
+   *scl_prefix = malloc(MAXPATH + 1);
+
+   if (TEST_SCL_PREFIX != NULL && TEST_SCL_PREFIX != "" && strlen(TEST_SCL_PREFIX) != 0) {
+       strcpy(*scl_prefix, TEST_SCL_PREFIX);
+       return;
+   }
+
+   FILE *fh;
+
+   char buff[255];
+   char fname[MAXPATH + 1];
+   snprintf(fname, MAXPATH, "/etc/scl/prefixes/%s", php_package);
+
+   if( access( fname, F_OK ) != -1 ) {
+       fh = fopen(fname, "r");
+       if(!fscanf(fh, "%s", buff))
+       {
+           scl_prefix = NULL;
+       }
+       fclose(fh);
+       strcpy(*scl_prefix, buff);
+   }
+
+   // printf("File \"%s\" contained \"%s\"\n", fname, *scl_prefix);
+}
+
 void strategy_get_php_bin(char* buffer, size_t size,
-                 struct cli_config* cli_config, char* php_version) {
+                 struct cli_config* cli_config, char* php_package) {
     char        default_pattern[1024] = { 0 };
     struct stat path_stat;
 
+    char *scl_prefix;
+    strategy_get_scl_prefix_for_package(&scl_prefix, php_package);
+
     memset(buffer, 0, size);
-    if (cli_config == 0 || php_version == 0 || php_version[0] == 0) {
+    if (cli_config == 0 || php_package == 0 || php_package[0] == 0) {
         return;
     }
     if (cli_config->php_bin_pattern[0] != 0) {
-        snprintf(buffer, size, cli_config->php_bin_pattern, php_version);
+        snprintf(buffer, size, cli_config->php_bin_pattern, scl_prefix, php_package);
     } else {
         get_bin_php_default_pattern(default_pattern, 1024);
-        snprintf(buffer, size, default_pattern, php_version);
+        snprintf(buffer, size, default_pattern, scl_prefix, php_package);
     }
     if (stat(buffer, &path_stat) != 0 ||
         S_ISREG(path_stat.st_mode) == 0 ||
@@ -50,21 +85,23 @@ void strategy_get_php_bin(char* buffer, size_t size,
 }
 
 void strategy_get_lsphp_bin(char* buffer, size_t size,
-                   struct cli_config* cli_config, char* php_version) {
+                   struct cli_config* cli_config, char* php_package) {
     char        default_pattern[1024] = { 0 };
     struct stat path_stat;
+    char *scl_prefix;
+    strategy_get_scl_prefix_for_package(&scl_prefix, php_package);
 
     memset(buffer, 0, size);
-    if (cli_config == 0 || php_version == 0 || php_version[0] == 0) {
+    if (cli_config == 0 || php_package == 0 || php_package[0] == 0) {
         return;
     }
     if (cli_config->lsphp_bin_pattern[0] != 0) {
-        snprintf(buffer, size, cli_config->lsphp_bin_pattern, php_version);
+        snprintf(buffer, size, cli_config->lsphp_bin_pattern, scl_prefix, php_package);
     } else if (cli_config->php_bin_pattern[0] != 0) {
-        snprintf(buffer, size, cli_config->php_bin_pattern, php_version);
+        snprintf(buffer, size, cli_config->php_bin_pattern, scl_prefix, php_package);
     } else {
         get_bin_php_default_pattern(default_pattern, 1024);
-        snprintf(buffer, size, default_pattern, php_version);
+        snprintf(buffer, size, default_pattern, scl_prefix, php_package);
     }
     if (stat(buffer, &path_stat) != 0 ||
         S_ISREG(path_stat.st_mode) == 0 ||
@@ -74,7 +111,7 @@ void strategy_get_lsphp_bin(char* buffer, size_t size,
 }
 
 void strategy_get_php_conf_file(char* buffer, size_t size,
-                                struct cli_config* cli_config, 
+                                struct cli_config* cli_config,
                                 struct paths_config* paths_config) {
     struct stat file_stat;
 

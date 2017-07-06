@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/path_get_htaccess_php_version_002.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/path_get_htaccess_php_package_004.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -24,26 +24,27 @@
 
 #include "path.h"
 
-int unauthorized_get_from_file = 0;
+int get_from_file_called = 0;
 
-void __wrap_htaccess_get_php_version_from_file(char* buf, size_t size, char* path, size_t path_size) {
-  unauthorized_get_from_file = 1;
+void __wrap_htaccess_get_php_package_from_file(char* buf, size_t size, char* path, size_t path_size) {
+   get_from_file_called = 1;
+   memset(buf, 0, size);
 }
 
 int main(int argc, char** argv) {
-  char  testcase[1024] = { 0 };
+  char  testcase[1024] = "/test.php";
   char  version[8] = "junk";
 
-  printf("testing path_get_htaccess_php_version on empty string\n");
-  printf("  calling function path_get_htaccess_php_version(\"%s\", %d, \"%s\", %d)\n", version, 8, testcase, 1024);
+  printf("testing path_get_htaccess_php_package with no php version in .htaccess path for \"%s\"\n", testcase);
 
-  path_get_htaccess_php_version(version, 8, testcase, 1024);
+  printf("  calling function path_get_htaccess_php_package(\"%s\", %d, \"%s\", %d)\n", version, 8, testcase, 1024);
+  path_get_htaccess_php_package(version, 8, testcase, 1024);
 
-  if (unauthorized_get_from_file) {
-    printf("ERROR: attempt to htaccess_get_php_version_from_file occurred\n");
+  if (get_from_file_called == 0) {
+    printf("ERROR: htaccess_get_php_package_from_file not called\n");
     return 1;
   } else {
-    printf("  htaccess_get_php_version_from_file not called\n");
+    printf("  htaccess_get_php_package_from_file called\n");
   }
 
   if (strnlen(version, 8) != 0) {

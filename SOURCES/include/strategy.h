@@ -1,4 +1,4 @@
-/* ea-php-cli - include/strategy.h              Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - include/strategy.h              Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -17,6 +17,8 @@
 #ifndef STRATEGY_H
 #define STRATEGY_H
 
+extern char TEST_SCL_PREFIX[255];
+
 /* Contains logic routines for finding the preferred item */
 
 #include <unistd.h>
@@ -24,8 +26,8 @@
 #include "cli-config.h"
 #include "paths-config.h"
 
-void strategy_get_php_bin(char* buffer, size_t size, struct cli_config* cli_config, char* php_version);
-void strategy_get_lsphp_bin(char* buffer, size_t size, struct cli_config* cli_config, char* php_version);
+void strategy_get_php_bin(char* buffer, size_t size, struct cli_config* cli_config, char* php_package);
+void strategy_get_lsphp_bin(char* buffer, size_t size, struct cli_config* cli_config, char* php_package);
 void strategy_get_php_conf_file(char* buffer, size_t size, struct cli_config* cli_config, struct paths_config* paths_config);
 
 /* Typically implemented by the cli tool */

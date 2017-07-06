@@ -1,4 +1,4 @@
-/* ea-php-cli - include/path.h                  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - include/path.h                  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -26,7 +26,7 @@ char* path_basedir(char* buf, char* path, size_t size);
 char* path_php_cli_yaml(char* buf, size_t size);
 
 /* return the php version according to .htaccess files */
-void path_get_htaccess_php_version(char* buf, size_t size,
+void path_get_htaccess_php_package(char* buf, size_t size,
                                    char* path, size_t path_size);
 
 #endif /* PATH_H */

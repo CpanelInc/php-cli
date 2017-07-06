@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/strategy_get_php_bin_012.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/strategy_get_php_bin_012.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -37,7 +37,7 @@ void get_bin_php_default_pattern(char* buffer, size_t size) {
 
 int main(int argc, char** argv) {
   struct cli_config cli_config;
-  char php_version[8] = "30";
+  char php_package[8] = "30";
   char php_bin[1024] = "junk";
 
   /* Assure empty php_bin_pattern */
@@ -46,8 +46,8 @@ int main(int argc, char** argv) {
   printf("testing strategy_get_php_bin on php version \"30\" with "
          "empty bin_pattern and no corresponding file\n");
   printf("  calling strategy_get_php_bin(\"%s\", %d, &cli_config, "
-         "%s)\n", php_bin, 1024, php_version);
-  strategy_get_php_bin(php_bin, 1024, &cli_config, php_version);
+         "%s)\n", php_bin, 1024, php_package);
+  strategy_get_php_bin(php_bin, 1024, &cli_config, php_package);
 
   if (get_bin_php_default_pattern_called == 0) {
     printf("ERROR: get_bin_php_default_pattern was not called\n");

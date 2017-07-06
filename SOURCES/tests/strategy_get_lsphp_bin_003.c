@@ -1,4 +1,4 @@
-/* ea-php-cli - tests/strategy_get_lsphp_bin_003.c  Copyright 2016 cPanel, Inc. */
+/* ea-php-cli - tests/strategy_get_lsphp_bin_003.c  Copyright 2017 cPanel, Inc. */
 /*                                                     All rights Reserved. */
 /* copyright@cpanel.net                                   http://cpanel.net */
 /*                                                                          */
@@ -33,12 +33,12 @@ void get_bin_php_default_pattern(char* buffer, size_t size) {
 
 int main(int argc, char** argv) {
   struct cli_config* cli_config = 0;
-  char php_version[8] = "";
+  char php_package[8] = "";
   char lsphp_bin[1024] = "junk";
 
   printf("testing strategy_get_lsphp_bin on empty version\n");
-  printf("  calling strategy_get_lsphp_bin(\"%s\", %d, (cli_config*)0, %s)\n", lsphp_bin, 1024, php_version);
-  strategy_get_lsphp_bin(lsphp_bin, 1024, cli_config, php_version);
+  printf("  calling strategy_get_lsphp_bin(\"%s\", %d, (cli_config*)0, %s)\n", lsphp_bin, 1024, php_package);
+  strategy_get_lsphp_bin(lsphp_bin, 1024, cli_config, php_package);
 
   if (get_bin_php_default_pattern_called) {
     printf("ERROR: get_bin_php_default_pattern was called\n");
