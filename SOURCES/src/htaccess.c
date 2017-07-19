@@ -29,6 +29,7 @@ void htaccess_get_php_package_from_file(char* buf, size_t size, char* path, size
    struct stat path_stat;
    FILE*       fin;
    char        line[1024];
+   char        line_copy[1025];
    char*       position;
    char*       add_type_line = "AddType application/x-httpd-";
 
@@ -43,10 +44,19 @@ void htaccess_get_php_package_from_file(char* buf, size_t size, char* path, size
    fin = fopen(path, "r");
    if (fin) {
        while  (buf[0] == 0 && fgets(line, 1024, fin) != NULL) {
-           if ((position = strstr(line, add_type_line)) != 0) {
-               strncpy(buf, position+strlen(add_type_line), size); // grab the package an everythign after it up to `size` (i.e. 20)
+
+           // strip comments, have to prepend a space or the strtok() hack won't work for lines beginning w/ #
+           sprintf(line_copy, " %s\n", line);
+           strtok(line_copy, "#");
+
+           if ((position = strstr(line_copy, add_type_line)) != 0) {
+
+               strncpy(buf, position+strlen(add_type_line), size); // grab the package an everything after it up to `size` (i.e. 20)
                strtok(buf, " "); // strip of the space and everything after it
                strtok(buf, "___"); // Look for '3 underscores' at https://cpanel.wiki/display/EA/Adding+a+PHP+Handler for more details
+
+               // buf is our package but is it a PHP package (i.e. does it =~ m/\-php\n+$/)?
+               // TODO EA-6543: nullify buf if !~ ^^^
            }
        }
        fclose(fin);
