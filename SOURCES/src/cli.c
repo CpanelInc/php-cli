@@ -32,9 +32,11 @@ void cli_get_php_package(char* buf, size_t size, char** argv) {
         return;
     }
     char** index = argv;
+    char php_package[size];
     while (*index != 0 && *(index+1) != 0) {
         if (!strncmp(*index, "-ea_php", 10)) {
-          strncpy(buf, *(index+1), size);
+          sprintf(php_package, "%s%s", "ea-php", *(index+1));
+          strncpy(buf, php_package, size);
           return;
         }
         index++; 
