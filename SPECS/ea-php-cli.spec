@@ -67,6 +67,7 @@ rm -rf %{buildroot}
 * Thu Jul 20 2017 Dan Muey <dan@cpanel.net> - 0.2.0-5
 - EA-6569: fix `-ea_php NN` handling to set package name
 - EA-6542: Ignore commented out MIME Types
+- EA-6543: ignore .htaccess 'mime type packages' that does not contain '-php'
 
 * Tue Jun 20 2017 Dan Muey <dan@cpanel.net> - 0.2.0-4
 - EA-6333: Support MultiPHP System's non ea- SCL PHPs

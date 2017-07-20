@@ -55,8 +55,10 @@ void htaccess_get_php_package_from_file(char* buf, size_t size, char* path, size
                strtok(buf, " "); // strip of the space and everything after it
                strtok(buf, "___"); // Look for '3 underscores' at https://cpanel.wiki/display/EA/Adding+a+PHP+Handler for more details
 
-               // buf is our package but is it a PHP package (i.e. does it =~ m/\-php\n+$/)?
-               // TODO EA-6543: nullify buf if !~ ^^^
+               // buf is our package but is it a PHP package
+               if (strstr(buf, "-php") == NULL) { // ?TODO/YANGI?: make this even smarter? e.g. =~ m/-php\d\d$/
+                    buf[0] = 0;
+               }
            }
        }
        fclose(fin);
