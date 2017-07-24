@@ -7,7 +7,7 @@
 Name:           %{ns_name}-%{upstream_name}
 Version:        0.2.0
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 4
+%define release_prefix 5
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -64,6 +64,11 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Thu Jul 20 2017 Dan Muey <dan@cpanel.net> - 0.2.0-5
+- EA-6569: fix `-ea_php NN` handling to set package name
+- EA-6542: Ignore commented out MIME Types
+- EA-6543: ignore .htaccess 'mime type packages' that does not contain '-php'
+
 * Tue Jun 20 2017 Dan Muey <dan@cpanel.net> - 0.2.0-4
 - EA-6333: Support MultiPHP System's non ea- SCL PHPs
 
