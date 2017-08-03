@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
   char* testcase[] = { "-ea_php", "54", 0 };
   char version[8] = "junk";
 
-  char* expected_version = "54";
+  char* expected_version = "ea-php54";
 
   printf("testing cli_get_php_package on \"-ea_php 54\"\n");
   printf("  calling cli_get_php_package(\"%s\", %d, @{\"-ea_php\", \"54\", 0})\n",
