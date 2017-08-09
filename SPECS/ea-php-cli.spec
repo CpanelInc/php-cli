@@ -7,7 +7,7 @@
 Name:           %{ns_name}-%{upstream_name}
 Version:        0.2.0
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 6
+%define release_prefix 7
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -64,6 +64,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Tue Aug 09 2017 Cory McIntire <cory@cpanel.net) - 0.2.0-7
+- EA-6669: Adjust line_copy buffer to prevent overflow
+
 * Tue Jul 25 2017 Dan Muey <dan@cpanel.net> - 0.2.0-6
 - redo tarball *AGAIN*, we really need to do EA-6572
 
