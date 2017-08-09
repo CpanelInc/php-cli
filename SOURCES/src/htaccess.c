@@ -29,7 +29,7 @@ void htaccess_get_php_package_from_file(char* buf, size_t size, char* path, size
    struct stat path_stat;
    FILE*       fin;
    char        line[1024];
-   char        line_copy[1025];
+   char        line_copy[1027];
    char*       position;
    char*       add_type_line = "AddType application/x-httpd-";
 
