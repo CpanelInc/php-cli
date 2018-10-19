@@ -129,6 +129,12 @@ int main(int argc, char* argv[]) {
                     continue;
                 }
             }
+            if (!strcmp (argv [i], "-ea_reference_dir")) {
+                if ((i + 1) < argc) {
+                    i++; /* double increment */
+                    continue;
+                }
+            }
 
             current = alloc_key_pair ();
             current->key = get_string_copy ("place_holder");

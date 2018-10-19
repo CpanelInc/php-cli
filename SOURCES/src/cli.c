@@ -39,7 +39,25 @@ void cli_get_php_package(char* buf, size_t size, char** argv) {
           strncpy(buf, php_package, size);
           return;
         }
-        index++; 
+        index++;
+    }
+    return;
+}
+
+/** Copies the reference_path into buf if specified on the command line */
+void cli_get_reference_path(char* buf, size_t size, char** argv) {
+    memset(buf, 0, size);
+    if (argv == 0) {
+        return;
+    }
+    char** index = argv;
+    char reference_dir[size];
+    while (*index != 0 && *(index+1) != 0) {
+        if (!strncmp(*index, "-ea_reference_dir", 10)) {
+          strncpy(buf, *(index+1), size);
+          return;
+        }
+        index++;
     }
     return;
 }
