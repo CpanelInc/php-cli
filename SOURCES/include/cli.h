@@ -21,6 +21,7 @@
 
 void cli_get_php_package(char* buf, size_t size, char** argv);
 void cli_get_last_file(char* buf, size_t size, char** argv);
+void cli_get_reference_path(char* buf, size_t size, char** argv);
 int  cli_get_verbose(int* buf, char** argv);
 
 #endif /* CLI_H */

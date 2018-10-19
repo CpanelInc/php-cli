@@ -14,7 +14,7 @@ dnl WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 dnl See the License for the specific language governing permissions and
 dnl limitations under the License.
 
-AC_INIT([php-cli], [0.2.0], [support@cpanel.net])
+AC_INIT([php-cli], [0.2.1], [support@cpanel.net])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([am-tools])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])

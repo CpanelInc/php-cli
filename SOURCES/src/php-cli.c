@@ -77,10 +77,11 @@ void get_bin_php_default_pattern(char* buffer, size_t size) {
 }
 
 int main(int argc, char* argv[]) {
-    char                php_package[20]     = { 0 };
-    char                php_file[1024]      = { 0 };
-    char                php_conf_file[1024] = { 0 };
-    char                php_bin[1024]       = { 0 };
+    char                php_package[20]      = { 0 };
+    char                php_file[1024]       = { 0 };
+    char                reference_path[1024] = { 0 };
+    char                php_conf_file[1024]  = { 0 };
+    char                php_bin[1024]        = { 0 };
     struct cli_config   cli_config;
     struct paths_config paths_config;
     int                 has_verbose = 0;
@@ -98,10 +99,18 @@ int main(int argc, char* argv[]) {
     cli_get_php_package(php_package, 20, argv);
     if (php_package[0] == 0) {
       cli_get_last_file(php_file, 1024, argv);
+      cli_get_reference_path(reference_path, 1024, argv);
       if (php_file[0] == 0) {
           strncpy(php_file, "fake.php", 1024);
       }
-      path_get_htaccess_php_package(php_package, 20, php_file, 1024);
+
+      if (reference_path[0] != 0) {
+          strncat(reference_path, "/.", 1024); /* the last piece is stripped off, so we need to add a dummy piece */
+          path_get_htaccess_php_package(php_package, 20, reference_path, 1024);
+      }
+      else {
+          path_get_htaccess_php_package(php_package, 20, php_file, 1024);
+      }
     }
     strategy_get_php_bin(php_bin, 1024, &cli_config, php_package);
     if (php_bin[0] == 0) {
@@ -124,6 +133,12 @@ int main(int argc, char* argv[]) {
         xargc = 0;
         for (i = 0; i < argc; ++i) {
             if (!strcmp (argv [i], "-ea_php")) {
+                if ((i + 1) < argc) {
+                    i++; /* double increment */
+                    continue;
+                }
+            }
+            if (!strcmp (argv [i], "-ea_reference_dir")) {
                 if ((i + 1) < argc) {
                     i++; /* double increment */
                     continue;
