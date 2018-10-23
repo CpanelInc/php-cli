@@ -1,69 +1,78 @@
 # Defining the package namespace
 %global ns_name ea
 %global upstream_name php-cli
-
 %define debug_package %{nil}
 
 Name:           %{ns_name}-%{upstream_name}
-Version:        0.2.1
+Version:        1.0.0
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 7
+%define release_prefix 1
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
 Url:            http://cpanel.net
 License:        ASL 2.0
 Group:          Development/Languages
-BuildRequires:  libyaml-devel
-BuildRequires:  gcc-c++
-BuildRequires:  libtool
-Requires:       libyaml-devel
-Requires:       libyaml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-root
-Source:         php-cli-%{version}.tar.gz
+AutoReq:        no
+Source0:        php-cgi.pl
+Source1:        php-cli.pl
+Source2:        php-lsapi.pl
+Source3:        ea_php_cli.pm
 
 %description
-php-cli is a program installed to /usr/bin/php that when executed will run
-the version of users configured version of php.
-
+CLI and CGI PHP wrappers to dispatch to the user's configured version of php.
 
 %package lsphp
 Summary: Execute the correct lsphp binary for the configured PHP version
 Group: Development/Languages
+Requires: ea-php-cli = %{version}-%{release}
 
 %description lsphp
-php-cli-lsphp is a program installed to /usr/bin/lsphp that when executed will run
-the version of users configured version of lsphp.
-
-
-%prep
-%setup -q -n php-cli-%{version}
-
-%build
-%configure
-make
-make check
+LSAPI PHP wrappers to dispatch to the user's configured version of php.
 
 %install
 rm -rf %{buildroot}
-%make_install
-mv %{buildroot}/usr/bin/php-cgi %{buildroot}/usr/bin/php
-mv %{buildroot}/usr/local/bin/php-cli %{buildroot}/usr/local/bin/php
-cp %{buildroot}/usr/bin/php-lightspeed %{buildroot}/usr/local/bin/lsphp
-mv %{buildroot}/usr/bin/php-lightspeed %{buildroot}/usr/bin/lsphp
+mkdir -p %{buildroot}/usr/bin
+mkdir -p %{buildroot}/usr/local/bin
+mkdir -p %{buildroot}/var/cpanel/ea4
+cp -f %SOURCE0 %{buildroot}/usr/bin/php
+cp -f %SOURCE1 %{buildroot}/usr/local/bin/php
+cp -f %SOURCE2 %{buildroot}/usr/bin/lsphp
+cp -f %SOURCE2 %{buildroot}/usr/local/bin/lsphp
+cp -f %SOURCE3 %{buildroot}/var/cpanel/ea4/ea_php_cli.pm
 
 %clean
 rm -rf %{buildroot}
 
+%posttrans
+# can't compile in %build because OBS won't have our perlcc or the Cpanel:: modules we use
+if [ -x "/usr/local/cpanel/3rdparty/bin/perlcc" ]; then
+    echo "(JIT compiling - yes)"
+    cd / # must be relative or perlcc won't compile it
+    for file in usr/bin/php usr/local/bin/php usr/bin/lsphp usr/local/bin/lsphp; do
+        if [ -e $file ] && ! perl -e 'exit(-B $ARGV[0] ? 0 : 1)' $file; then
+            echo "JIT Compiling /$file"
+            /usr/local/cpanel/3rdparty/bin/perlcc -o $file $file
+        fi
+    done
+else
+    echo "(JIT compiling - no)"
+fi
+
 %files
 %attr(0755,root,root) /usr/bin/php
 %attr(0755,root,root) /usr/local/bin/php
+%attr(0644,root,root) /var/cpanel/ea4/ea_php_cli.pm
 
 %files lsphp
 %attr(0755,root,root) /usr/local/bin/lsphp
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Tue Oct 23 2018 Daniel Muey <dan@cpanel.net> - 1.0.0-1
+- ZC-4400: rewrite to make it easier to work with and fix all the bugs
+
 * Thu Oct 18 2018 Rikus Goodell <rikus.goodell@cpanel.net> - 0.2.1-1
 - EA-7935: Add support for -ea_reference_dir option.
 
