@@ -72,6 +72,7 @@ fi
 %changelog
 * Tue Oct 23 2018 Daniel Muey <dan@cpanel.net> - 1.0.0-1
 - ZC-4400: rewrite to make it easier to work with and fix all the bugs
+- ZC-4425: deprecate -ea_php flag
 
 * Thu Oct 18 2018 Rikus Goodell <rikus.goodell@cpanel.net> - 0.2.1-1
 - EA-7935: Add support for -ea_reference_dir option.
