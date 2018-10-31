@@ -41,10 +41,6 @@ describe "CLI PHP module" => sub {
             is [ ea_php_cli::proc_args("php-cgi") ]->[1], undef;
         };
 
-        it "should return pkg as second value when given via --ea-php-pkg=PKG" => sub {
-            is [ ea_php_cli::proc_args( "php-cgi", "--ea-php-pkg=ea-php78" ) ]->[1], "ea-php78";
-        };
-
         it "should return pkg when given via -ea_php NN" => sub {
             my @rv;
             trap { @rv = ea_php_cli::proc_args( "php-cgi", -ea_php => 99 ) };
@@ -53,7 +49,7 @@ describe "CLI PHP module" => sub {
 
         it "should give deprecation warning when given -ea_php NN" => sub {
             trap { ea_php_cli::proc_args( "php-cgi", -ea_php => 99 ) };
-            is $trap->stderr, "-ea_php is deprecated (will be removed 2019-11), please use --ea-php-pkg=<PKG> instead\n";
+            is $trap->stderr, "-ea_php is deprecated (will be removed 2019-11), please use the version specific symlink instead (documented at https://go.cpanel.net/ea-php-cli)\n";
         };
 
         it "should return, as its third value, abs path of . when given no file" => sub {
@@ -80,11 +76,11 @@ describe "CLI PHP module" => sub {
             is [ ea_php_cli::proc_args( "php-cgi", "--ea-reference-dir=./derp$$", "php.php" ) ]->[2], Cwd::abs_path("./derp$$");
         };
 
-        it "should pass everything but --ea-php-pkg=PKG, -ea_php NN, and --ea-reference-dir after the 3rd value" => sub {
+        it "should pass everything but -ea_php NN, and --ea-reference-dir after the 3rd value" => sub {
             my @args = qw(1 2 3 -derp file.php -xyz);
             my @rv;
-            trap { @rv = ea_php_cli::proc_args( "php-cgi", qw(-ea_php NN --ea-php-pkg=PKG), @args, "--ea-reference-dir=DIR" ) };
-            is_deeply \@rv, [ "php-cgi", "PKG", Cwd::abs_path("DIR"), @args ];
+            trap { @rv = ea_php_cli::proc_args( "php-cgi", qw(-ea_php NN), @args, "--ea-reference-dir=DIR" ) };
+            is_deeply \@rv, [ "php-cgi", "ea-phpNN", Cwd::abs_path("DIR"), @args ];
         };
     };
 

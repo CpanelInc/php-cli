@@ -20,6 +20,11 @@ Source1:        php-cli.pl
 Source2:        php-lsapi.pl
 Source3:        ea_php_cli.pm
 
+# 'posttrans' info:
+# can't compile in 'build' because OBS won't have our perlcc or the Cpanel:: modules we use
+#     - must be relative or perlcc won't compile it
+#     - comments in 'posttrans' (or right above it at the end of 'clean') makes the scriptlet have a weird non-fatal error (e.g. ZC-4424)
+
 %description
 CLI and CGI PHP wrappers to dispatch to the user's configured version of php.
 
@@ -46,13 +51,12 @@ cp -f %SOURCE3 %{buildroot}/var/cpanel/ea4/ea_php_cli.pm
 rm -rf %{buildroot}
 
 %posttrans
-# can't compile in %build because OBS won't have our perlcc or the Cpanel:: modules we use
 if [ -x "/usr/local/cpanel/3rdparty/bin/perlcc" ]; then
     echo "(JIT compiling - yes)"
-    cd / # must be relative or perlcc won't compile it
+    cd /
     for file in usr/bin/php usr/local/bin/php usr/bin/lsphp usr/local/bin/lsphp; do
         if [ -e $file ] && ! perl -e 'exit(-B $ARGV[0] ? 0 : 1)' $file; then
-            echo "JIT Compiling /$file"
+            echo "    JIT Compiling /$file"
             /usr/local/cpanel/3rdparty/bin/perlcc -o $file $file
         fi
     done
@@ -72,6 +76,7 @@ fi
 %changelog
 * Tue Oct 23 2018 Daniel Muey <dan@cpanel.net> - 1.0.0-1
 - ZC-4400: rewrite to make it easier to work with and fix all the bugs
+- ZC-4425: deprecate -ea_php flag
 
 * Thu Oct 18 2018 Rikus Goodell <rikus.goodell@cpanel.net> - 0.2.1-1
 - EA-7935: Add support for -ea_reference_dir option.
