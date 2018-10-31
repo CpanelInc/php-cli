@@ -23,6 +23,7 @@ Source3:        ea_php_cli.pm
 # 'posttrans' info:
 # can't compile in 'build' because OBS won't have our perlcc or the Cpanel:: modules we use
 #     - must be relative or perlcc won't compile it
+#     - 2>/dev/null is to hide scary sounding yet harmless warning from users, its a know issue CM-1223
 #     - comments in 'posttrans' (or right above it at the end of 'clean') makes the scriptlet have a weird non-fatal error (e.g. ZC-4424)
 
 %description
@@ -57,7 +58,7 @@ if [ -x "/usr/local/cpanel/3rdparty/bin/perlcc" ]; then
     for file in usr/bin/php usr/local/bin/php usr/bin/lsphp usr/local/bin/lsphp; do
         if [ -e $file ] && ! perl -e 'exit(-B $ARGV[0] ? 0 : 1)' $file; then
             echo "    JIT Compiling /$file"
-            /usr/local/cpanel/3rdparty/bin/perlcc -o $file $file
+            /usr/local/cpanel/3rdparty/bin/perlcc -o $file $file 2>/dev/null
         fi
     done
 else
