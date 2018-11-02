@@ -9,7 +9,7 @@ package ea_php_cli::cgi;
 use strict;
 use warnings;
 
-use lib '/var/cpanel/ea4';
+use lib '/var/cpanel/ea4/ea-php-cli';
 use ea_php_cli;
 
 my $bin = "php-cgi";
