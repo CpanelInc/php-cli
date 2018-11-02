@@ -64,11 +64,12 @@ sub perform {
 
         my $o = Capture::Tiny::capture_merged(
             sub {                                         # hide scary sounding yet harmless warning from users on C7, its a know issue CM-1223
+                unlink $bin;                              # maybe mv($bin, $bin.bak) if unlink becomes a problem, do this so we can detect exit clean but no binary situation seen during QA
                 $sysrv = system( "/usr/local/cpanel/3rdparty/bin/perlcc", '-o', $bin, $files{$bin} );
             }
         );
 
-        if ( $sysrv != 0 ) {
+        if ( $sysrv != 0 || !-e $bin ) {                  # perlcc can exit clean and not have produces a binary, no error in output either
             warn "JIT compile $bin failed, output was:\n\t$o\nUsing uncompiled $bin …\n";
             Cpanel::FileUtils::Copy::safecopy( $files{$bin}, $bin ) || warn "Installation of uncompiled $bin failed: $!\n";
         }
