@@ -84,7 +84,7 @@ describe "CLI PHP JIT compiler for ULC/install/" => sub {
         it "should, on perlcc unclean exit, warn about it" => sub {
             local $current_system = sub { 1 };
             trap { Install::PHPCLI->new->perform() };
-            like $trap->stderr, qr/Using uncompiled/;
+            like $trap->stderr, qr/JIT compile .* failed,/;
         };
 
         it "should, on perlcc unclean exit, install the source version" => sub {
