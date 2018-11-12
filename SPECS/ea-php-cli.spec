@@ -20,12 +20,6 @@ Source1:        php-cli.pl
 Source2:        php-lsapi.pl
 Source3:        ea_php_cli.pm
 
-# 'posttrans' info:
-# can't compile in 'build' because OBS won't have our perlcc or the Cpanel:: modules we use
-#     - must be relative or perlcc won't compile it
-#     - 2>/dev/null is to hide scary sounding yet harmless warning from users, its a know issue CM-1223
-#     - comments in 'posttrans' (or right above it at the end of 'clean') makes the scriptlet have a weird non-fatal error (e.g. ZC-4424)
-
 %description
 CLI and CGI PHP wrappers to dispatch to the user's configured version of php.
 
@@ -50,20 +44,6 @@ cp -f %SOURCE3 %{buildroot}/var/cpanel/ea4/ea_php_cli.pm
 
 %clean
 rm -rf %{buildroot}
-
-%posttrans
-if [ -x "/usr/local/cpanel/3rdparty/bin/perlcc" ]; then
-    echo "(JIT compiling - yes)"
-    cd /
-    for file in usr/bin/php usr/local/bin/php usr/bin/lsphp usr/local/bin/lsphp; do
-        if [ -e $file ] && ! perl -e 'exit(-B $ARGV[0] ? 0 : 1)' $file; then
-            echo "    JIT Compiling /$file"
-            /usr/local/cpanel/3rdparty/bin/perlcc -o $file $file 2>/dev/null
-        fi
-    done
-else
-    echo "(JIT compiling - no)"
-fi
 
 %files
 %attr(0755,root,root) /usr/bin/php
