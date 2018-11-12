@@ -19,11 +19,6 @@ Source0:        php-cgi.pl
 Source1:        php-cli.pl
 Source2:        php-lsapi.pl
 Source3:        ea_php_cli.pm
-Source4:        PHPCLI.pm
-
-# 'posttrans' info:
-# can't compile in 'build' because OBS won't have our perlcc or the Cpanel:: modules we use
-#     - comments in 'posttrans' (or right above it at the end of 'clean') makes the scriptlet have a weird non-fatal error (e.g. ZC-4424)
 
 %description
 CLI and CGI PHP wrappers to dispatch to the user's configured version of php.
@@ -38,41 +33,26 @@ LSAPI PHP wrappers to dispatch to the user's configured version of php.
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/usr/local/cpanel/install
-mkdir -p %{buildroot}/var/cpanel/ea4/ea-php-cli
 mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/local/bin
-
-# the %ghost files must be in build root
-touch %{buildroot}/usr/bin/php
-touch %{buildroot}/usr/bin/lsphp
-touch %{buildroot}/usr/local/bin/php
-touch %{buildroot}/usr/local/bin/lsphp
-
-cp -f %SOURCE0 %{buildroot}/var/cpanel/ea4/ea-php-cli/
-cp -f %SOURCE1 %{buildroot}/var/cpanel/ea4/ea-php-cli/
-cp -f %SOURCE2 %{buildroot}/var/cpanel/ea4/ea-php-cli/
-cp -f %SOURCE3 %{buildroot}/var/cpanel/ea4/ea-php-cli/
-cp -f %SOURCE4 %{buildroot}/usr/local/cpanel/install/
+mkdir -p %{buildroot}/var/cpanel/ea4
+cp -f %SOURCE0 %{buildroot}/usr/bin/php
+cp -f %SOURCE1 %{buildroot}/usr/local/bin/php
+cp -f %SOURCE2 %{buildroot}/usr/bin/lsphp
+cp -f %SOURCE2 %{buildroot}/usr/local/bin/lsphp
+cp -f %SOURCE3 %{buildroot}/var/cpanel/ea4/ea_php_cli.pm
 
 %clean
 rm -rf %{buildroot}
 
-%posttrans
-/usr/local/cpanel/3rdparty/bin/perl /usr/local/cpanel/install/PHPCLI.pm
-
 %files
-%attr(0755,root,root) /var/cpanel/ea4/ea-php-cli/php-cli.pl
-%attr(0755,root,root) /var/cpanel/ea4/ea-php-cli/php-cgi.pl
-%ghost /usr/bin/php
-%ghost /usr/local/bin/php
-%attr(0644,root,root) /var/cpanel/ea4/ea-php-cli/ea_php_cli.pm
-%attr(0644,root,root) /usr/local/cpanel/install/PHPCLI.pm
+%attr(0755,root,root) /usr/bin/php
+%attr(0755,root,root) /usr/local/bin/php
+%attr(0644,root,root) /var/cpanel/ea4/ea_php_cli.pm
 
 %files lsphp
-%attr(0755,root,root) /var/cpanel/ea4/ea-php-cli/php-lsapi.pl
-%ghost /usr/local/bin/lsphp
-%ghost /usr/bin/lsphp
+%attr(0755,root,root) /usr/local/bin/lsphp
+%attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
 * Tue Oct 23 2018 Daniel Muey <dan@cpanel.net> - 1.0.0-1
