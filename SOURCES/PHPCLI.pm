@@ -70,7 +70,7 @@ sub perform {
         );
 
         if ( $sysrv != 0 || !-e $bin ) {                  # perlcc can exit clean and not have produces a binary, no error in output either
-            warn "JIT compile $bin failed, Using uncompiled $bin …\n";
+            warn "… Using uncompiled $bin …\n";
             Cpanel::FileUtils::Copy::safecopy( $files{$bin}, $bin ) || warn "Installation of uncompiled $bin failed: $!\n";
         }
 
