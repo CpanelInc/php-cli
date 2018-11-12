@@ -9,8 +9,7 @@ use base qw( Cpanel::Task );
 
 use strict;
 use warnings;
-use Capture::Tiny           ();
-use Cpanel::FileUtils::Copy ();
+use Capture::Tiny ();
 
 our $VERSION = '1.0';
 
