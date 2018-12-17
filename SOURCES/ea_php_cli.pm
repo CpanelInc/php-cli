@@ -9,9 +9,8 @@ package ea_php_cli;
 use strict;
 use warnings;
 
-use Cwd                  ();
-use Cpanel::PHP::Config  ();
-use Cpanel::SysPkgs::SCL ();
+our $EUID;
+$EUID = $> if ${^GLOBAL_PHASE} eq "START";
 
 my %types = (
     php       => 'CLI',
@@ -72,8 +71,14 @@ sub proc_args {
         }
     }
 
-    $dir //= ".";
-    $dir = Cwd::abs_path($dir);                                       # since the lookup is based on abs path
+    # since the lookup is based on abs path:
+    if ( !defined $dir || $dir eq "." ) {
+        $dir = readlink('/proc/self/cwd');
+    }
+    elsif ( substr( $dir, 0, 1 ) ne "/" || index( $dir, ".." ) != -1 ) {
+        require Cwd;
+        $dir = Cwd::abs_path($dir);
+    }
 
     die "Could not determine path to lookup PHP setting for based on arguments\n" if !$dir;    # this would be pretty odd
 
@@ -86,40 +91,20 @@ sub get_pkg_for_dir {
     $type //= "undefined";
     die "Invalid type ($type)\n" if !exists $types{$type};
 
-    die "“$dir” is not a directory\n" if !-d $dir;
+    my $dir_stat = [ stat($dir) ];
+    die "“$dir” is not a directory\n" if !-d _;
 
-    my $pkg;
+    return _get_default_pkg() if $dir_stat->[4] == 0;
 
-    # ¿TODO/YAGNI? - caching: $pkg = readlink("$dir/.ea-php-cli.cache") if its not too old
+    my $pkg = _get_from_cache( $dir, $dir_stat );
+    return $pkg if $pkg;
 
-    # TODO: optimize me:
-    my %dir_cache;
-    my %uid_cache;
-    my ( $dom, $uid );    # buffers
-    my %getpwuid_cache;
+    $pkg = _lookup_pkg_for_path($dir);
 
-    while ($dir) {        # walk the path looking for the first configured PHP (if any)
-        $uid = _get_uid($dir);    # EUID may not own $dir
-        last if !$uid;            # root can't own a domain, thus can't set a PHP version
+    _cache_it_if_you_can( $dir, $dir_stat, $pkg );
 
-        if ( !exists $dir_cache{$dir} ) {
-            $getpwuid_cache{$uid} //= [ getpwuid($uid) ];
-            $uid_cache{$uid} //= Cpanel::PHP::Config::get_php_config_for_users( [ $getpwuid_cache{$uid}->[0] ] );
-            for $dom ( keys %{ $uid_cache{$uid} } ) {
-                $dir_cache{ $uid_cache{$uid}->{$dom}{documentroot} } = $uid_cache{$uid}->{$dom}{phpversion};
-            }
-        }
+    return $pkg || _get_default_pkg();    # get_php_config_for_users() factors in default, so $pkg should always be set but just in case …
 
-        if ( $dir_cache{$dir} ) {
-            $pkg = $dir_cache{$dir};
-            last;
-        }
-
-        $dir =~ s{/[^/]+$}{};
-    }
-
-    # ¿TODO/YAGNI? - caching: symlink($pkg, "$dir/.ea-php-cli.cache")
-    return $pkg || _get_default_pkg();
 }
 
 sub exec_via_pkg {
@@ -128,10 +113,7 @@ sub exec_via_pkg {
     $type //= "undefined";
     die "Invalid type ($type)\n" if !exists $types{$type};
 
-    if ( index( $pkg, "/" ) != -1 || index( $pkg, "\0" ) != -1 ) {
-        $pkg =~ s/\0/{NULL-BYTE}/g;
-        die "Package, $pkg, has invalid characters\n";
-    }
+    _pkg_name_check($pkg);
 
     my $prefix = _get_scl_prefix($pkg);
     my $binary = "$prefix/root/usr/bin/$type";
@@ -152,28 +134,124 @@ sub exec_via_pkg {
     return;
 }
 
+#################################
+#### get_pkg_for_dir() helpers ##
+#################################
+
+sub _get_from_cache {
+    my ( $dir, $dir_stat ) = @_;
+
+    my $pkg;
+    if ( my $dir_cache_mtime = ( lstat("$dir/.ea-php-cli.cache") )[9] ) {
+        my $user                 = getpwuid( $dir_stat->[4] );                        # could also lstat(_) but $dir's stat is probably more reliable
+        my $userdata_cache_mtime = ( stat("/var/cpanel/userdata/$user/cache") )[9];
+
+        if ( !$Cpanel::PHPFPM::Constants::php_conf_path ) { require Cpanel::PHPFPM::Constants }
+        my $phpconf_mtime = ( stat($Cpanel::PHPFPM::Constants::php_conf_path) )[9];
+
+        if ( $userdata_cache_mtime && $userdata_cache_mtime < $dir_cache_mtime && $phpconf_mtime < $dir_cache_mtime ) {
+            $pkg = readlink("$dir/.ea-php-cli.cache");
+
+            eval { _pkg_name_check($pkg); _get_scl_prefix($pkg) };
+            warn "$@\n" if $@;
+
+            return $pkg if $pkg;
+        }
+    }
+
+    return;
+}
+
+sub _lookup_pkg_for_path {
+    my ($dir) = @_;
+
+    my $pkg;
+    my %dir_cache;
+    my %uid_cache;
+    my ( $dom, $uid );    # buffers
+    my %getpwuid_cache;
+    require Cpanel::PHP::Config;
+
+    $dir =~ s{/+$}{};     # remove trailing /’s to since lookup is based on not having a trailing slash
+    while ($dir) {        # walk the path looking for the first configured PHP (if any)
+        $uid = _get_uid($dir);    # EUID may not own $dir
+        last if !$uid;            # root can't own a domain, thus can't set a PHP version
+
+        if ( !exists $dir_cache{$dir} ) {
+            $getpwuid_cache{$uid} //= [ getpwuid($uid) ];
+            eval { $uid_cache{$uid} //= Cpanel::PHP::Config::get_php_config_for_users( [ $getpwuid_cache{$uid}->[0] ] ) };
+            last if $@;           # non-cpanel users can't own a domain, thus can't set a PHP version
+
+            for $dom ( keys %{ $uid_cache{$uid} } ) {
+                $dir_cache{ $uid_cache{$uid}->{$dom}{documentroot} } = $uid_cache{$uid}->{$dom}{phpversion};
+            }
+        }
+
+        if ( $dir_cache{$dir} ) {
+            $pkg = $dir_cache{$dir};
+            last;
+        }
+        elsif ( $dir eq $getpwuid_cache{$uid}->[7] ) {    # because we can cache this one still
+            $pkg = _get_default_pkg();
+            last;
+        }
+
+        $dir =~ s{/[^/]+$}{};
+    }
+
+    return $pkg;
+}
+
+sub _cache_it_if_you_can {
+    my ( $dir, $dir_stat, $pkg ) = @_;
+
+    # attempt to cache for non-root
+    if ( $EUID && $EUID == $dir_stat->[4] && $pkg ) {    # get_php_config_for_users() factors in default, so $pkg should always be set but just in case …
+        local $!;
+        unlink "$dir/.ea-php-cli.cache";
+        symlink( $pkg, "$dir/.ea-php-cli.cache" );
+    }
+}
+
 ###############
 #### helpers ##
 ###############
 
+sub _pkg_name_check {
+    my ($pkg) = @_;
+
+    if ( index( $pkg, "/" ) != -1 || index( $pkg, "\0" ) != -1 || index( $pkg, ".." ) != -1 ) {
+        $pkg =~ s/\0/{NULL-BYTE}/g;
+        die "Package, $pkg, has invalid characters\n";
+    }
+
+    return 1;
+}
+
 sub _get_default_pkg {
+    require Cpanel::PHP::Config;
     my $default_pkg = Cpanel::PHP::Config::get_php_version_info()->{default};    # this calls a cached lookup woot woot
     die "Default PHP is not configured!\n" if !$default_pkg;
     return $default_pkg;
 }
 
+my %_get_scl_prefix;
+
 sub _get_scl_prefix {
     my ($pkg) = @_;
+    return $_get_scl_prefix{$pkg} if $_get_scl_prefix{$pkg};
 
+    require Cpanel::SysPkgs::SCL;
     my $prefix = Cpanel::SysPkgs::SCL::get_scl_prefix($pkg);
     die "“$pkg” is not an EA4 SCL PHP\n" if !$prefix || !-d $prefix;
 
-    return $prefix;
+    $_get_scl_prefix{$pkg} = $prefix;
+    return $_get_scl_prefix{$pkg};
 }
 
 sub _get_uid {
     my ($dir) = @_;
-    return $> || ( stat($dir) )[4];
+    return $EUID || ( stat($dir) )[4];
 }
 
 1;
