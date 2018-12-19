@@ -71,8 +71,10 @@ sub proc_args {
         }
     }
 
+    $dir //= ".";
+
     # since the lookup is based on abs path:
-    if ( !defined $dir || $dir eq "." ) {
+    if ( $dir eq "." && -r '/proc/self/cwd' ) {
         $dir = readlink('/proc/self/cwd');
     }
     elsif ( substr( $dir, 0, 1 ) ne "/" || index( $dir, ".." ) != -1 ) {
@@ -191,7 +193,7 @@ sub _lookup_pkg_for_path {
             $pkg = $dir_cache{$dir};
             last;
         }
-        elsif ( $dir eq $getpwuid_cache{$uid}->[7] ) {    # because we can cache this one still
+        elsif ( defined $getpwuid_cache{$uid} && defined $getpwuid_cache{$uid}->[7] && $dir eq $getpwuid_cache{$uid}->[7] ) {    # because we can cache this one still
             $pkg = _get_default_pkg();
             last;
         }
