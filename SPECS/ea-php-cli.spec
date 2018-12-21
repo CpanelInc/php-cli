@@ -6,7 +6,7 @@
 Name:           %{ns_name}-%{upstream_name}
 Version:        1.0.0
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 2
+%define release_prefix 3
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -55,6 +55,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Wed Dec 19 2018 Daniel Muey <dan@cpanel.net> - 1.0.0-3
+- ZC-4580: handle two minor edge cases
+
 * Mon Dec 10 2018 Daniel Muey <dan@cpanel.net> - 1.0.0-2
 - ZC-4459: Cache the calculated PHP version for a given directory
 
