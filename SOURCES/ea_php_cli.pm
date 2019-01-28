@@ -143,16 +143,18 @@ sub exec_via_pkg {
 sub _get_from_cache {
     my ( $dir, $dir_stat ) = @_;
 
+    my ( $user, $home ) = ( getpwuid( $dir_stat->[4] ) )[ 0, 7 ];
+    my $cachedir = _dir_to_cache_dir( $home, $dir );
+
     my $pkg;
-    if ( my $dir_cache_mtime = ( lstat("$dir/.ea-php-cli.cache") )[9] ) {
-        my $user                 = getpwuid( $dir_stat->[4] );                        # could also lstat(_) but $dir's stat is probably more reliable
+    if ( my $dir_cache_mtime = ( lstat("$cachedir/.ea-php-cli.cache") )[9] ) {
         my $userdata_cache_mtime = ( stat("/var/cpanel/userdata/$user/cache") )[9];
 
         if ( !$Cpanel::PHPFPM::Constants::php_conf_path ) { require Cpanel::PHPFPM::Constants }
         my $phpconf_mtime = ( stat($Cpanel::PHPFPM::Constants::php_conf_path) )[9];
 
         if ( $userdata_cache_mtime && $userdata_cache_mtime < $dir_cache_mtime && $phpconf_mtime < $dir_cache_mtime ) {
-            $pkg = readlink("$dir/.ea-php-cli.cache");
+            $pkg = readlink("$cachedir/.ea-php-cli.cache");
 
             eval { _pkg_name_check($pkg); _get_scl_prefix($pkg) };
             warn "$@\n" if $@;
@@ -209,10 +211,22 @@ sub _cache_it_if_you_can {
 
     # attempt to cache for non-root
     if ( $EUID && $EUID == $dir_stat->[4] && $pkg ) {    # get_php_config_for_users() factors in default, so $pkg should always be set but just in case …
+
         local $!;
-        unlink "$dir/.ea-php-cli.cache";
-        symlink( $pkg, "$dir/.ea-php-cli.cache" );
+        unlink "$dir/.ea-php-cli.cache";                 # clean up old cache location if necessary
+        my ( $user, $home ) = ( getpwuid( $dir_stat->[4] ) )[ 0, 7 ];
+        my $cachedir = _dir_to_cache_dir( $home, $dir );
+        require File::Path::Tiny;
+        File::Path::Tiny::mk($cachedir) or warn "Could not ensure ea-php-cli cache directory!\n";
+        unlink "$cachedir/.ea-php-cli.cache";
+        symlink( $pkg, "$cachedir/.ea-php-cli.cache" );
     }
+}
+
+sub _dir_to_cache_dir {
+    my ( $home, $dir ) = @_;
+    $dir =~ s{^\Q$home\E}{$home/.cpanel/ea-php-cli};
+    return $dir;
 }
 
 ###############

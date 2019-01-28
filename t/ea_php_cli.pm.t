@@ -175,10 +175,21 @@ describe "CLI PHP module" => sub {
             yield;
         };
 
+        it "should cache in HOME/cpanel/ea-php-cli/ when it is in EUID's HOME" => sub {
+            my $dir = Test::MockFile->dir( "/home/derp/foo/bar/baz", [] );
+            is ea_php_cli::_dir_to_cache_dir( "/home/derp", "/home/derp/foo/bar/baz" ), "/home/derp/.cpanel/ea-php-cli/foo/bar/baz";
+        };
+
+        it "should not cache in HOME/cpanel/ea-php-cli/ when it is not in EUID's HOME" => sub {
+            my $dir = Test::MockFile->dir( "/usr/share/foo/bar/baz", [] );
+            is ea_php_cli::_dir_to_cache_dir( "/home/derp", "/usr/share/foo/bar/baz" ), "/usr/share/foo/bar/baz";
+        };
+
         it "should return default package if DIR is owned by root" => sub {
             my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => 0 } );
             no warnings "redefine";
-            local *ea_php_cli::_get_default_pkg = sub { "DEF$$" };
+            local *ea_php_cli::_dir_to_cache_dir = sub { $dir->{file_name} };
+            local *ea_php_cli::_get_default_pkg  = sub { "DEF$$" };
             my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->{file_name} );
             is $pkg, "DEF$$";
         };
@@ -186,6 +197,7 @@ describe "CLI PHP module" => sub {
         it "should return default if DIR is owned by non-cpanel users" => sub {
             my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => $$ + 42 } );
             no warnings "redefine";
+            local *ea_php_cli::_dir_to_cache_dir                 = sub { $dir->{file_name} };
             local *Cpanel::PHP::Config::get_php_config_for_users = sub { die "Failed to fetch userdata for “derp” at …" };
             local *ea_php_cli::_get_default_pkg                  = sub { "DEF$$" };
             my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->{file_name} );
@@ -194,6 +206,8 @@ describe "CLI PHP module" => sub {
 
         it "should return DIR cache if it is newer than the DIR owner's user data" => sub {
             my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => $$ + 1 } );
+            no warnings "redefine";
+            local *ea_php_cli::_dir_to_cache_dir = sub { $dir->{file_name} };
 
             # Test::MockFile->symlink() is broken ATM: https://github.com/CpanelInc/Test-MockFile/issues/25
             # my $cch = Test::MockFile->symlink( "ea-php88", "$dir->{file_name}/.ea-php-cli.cache" );
@@ -220,6 +234,7 @@ describe "CLI PHP module" => sub {
                 };
 
                 local $test{cached_dir} = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => $$ + 1 } );
+                local *ea_php_cli::_dir_to_cache_dir = sub { $test{cached_dir}->{file_name} };
 
                 # Test::MockFile->symlink() is broken ATM: https://github.com/CpanelInc/Test-MockFile/issues/25
                 path( $test{cached_dir}->{file_name} )->mkpath;
@@ -252,7 +267,8 @@ describe "CLI PHP module" => sub {
                 local $ea_php_cli::EUID = $$ + 1;
                 local $HOME             = $test{tmpdir}->{file_name};
                 no warnings "redefine";
-                local *ea_php_cli::_get_default_pkg = sub { "DEF$$" };
+                local *ea_php_cli::_dir_to_cache_dir = sub { $HOME };
+                local *ea_php_cli::_get_default_pkg  = sub { "DEF$$" };
                 my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $HOME );
                 is readlink("$HOME/.ea-php-cli.cache"), "DEF$$";
             };
