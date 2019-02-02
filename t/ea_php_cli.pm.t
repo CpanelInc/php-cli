@@ -93,6 +93,45 @@ describe "CLI PHP module" => sub {
             trap { @rv = ea_php_cli::proc_args( "php-cgi", qw(-ea_php NN), @args, "--ea-reference-dir=DIR" ) };
             is_deeply \@rv, [ "php-cgi", "ea-phpNN", Cwd::abs_path("DIR"), @args ];
         };
+
+        it "should resolve the symlink if PWD does not match abs_path" => sub {
+
+            # Cannot use MockFile here due to the syscall
+            my $tmpsymlinkroot = Path::Tiny->tempdir();
+            mkdir("$tmpsymlinkroot/original_path");
+            symlink( "original_path", "$tmpsymlinkroot/sym_path" );
+            my $current_cwd = Cwd::getcwd();
+            chdir("$tmpsymlinkroot/sym_path");
+            is [ ea_php_cli::proc_args("php-cgi") ]->[2], "$tmpsymlinkroot/original_path";
+            chdir($current_cwd);
+        };
+
+        it "should resolve the symlink if PWD does contains ../" => sub {
+
+            # Cannot use MockFile here due to the syscall
+            my $tmpsymlinkroot = Path::Tiny->tempdir();
+            mkdir("$tmpsymlinkroot/original_path");
+            symlink( "original_path", "$tmpsymlinkroot/sym_path" );
+            my $current_cwd = Cwd::getcwd();
+            chdir("$tmpsymlinkroot/sym_path");
+            local $ENV{'PWD'} = "$tmpsymlinkroot/original_path/../sym_path";
+            is [ ea_php_cli::proc_args("php-cgi") ]->[2], "$tmpsymlinkroot/original_path";
+            chdir($current_cwd);
+        };
+
+        it "should not resolve the symlink if PWD matches abs_path" => sub {
+
+            # Cannot use MockFile here due to the syscall
+            my $tmpsymlinkroot = Path::Tiny->tempdir();
+            mkdir("$tmpsymlinkroot/original_path");
+            symlink( "original_path", "$tmpsymlinkroot/sym_path" );
+            my $current_cwd = Cwd::getcwd();
+            chdir("$tmpsymlinkroot/sym_path");
+            local $ENV{'PWD'} = "$tmpsymlinkroot/sym_path";
+            is [ ea_php_cli::proc_args("php-cgi") ]->[2], "$tmpsymlinkroot/sym_path";
+            chdir($current_cwd);
+        };
+
     };
 
     describe "get_pkg_for_dir() function" => sub {
