@@ -104,7 +104,7 @@ sub get_pkg_for_dir {
     my $pkg = _get_from_cache( $dir, $dir_stat );
     return $pkg if $pkg;
 
-    $pkg = _lookup_pkg_for_path($dir);
+    $pkg = _get_pkg_for_path($dir);
 
     _cache_it_if_you_can( $dir, $dir_stat, $pkg );
 
@@ -142,6 +142,50 @@ sub exec_via_pkg {
 #################################
 #### get_pkg_for_dir() helpers ##
 #################################
+
+sub _get_pkg_for_path {
+    my ($dir) = @_;
+    my $pkg;
+
+    if ( $dir eq $ENV{PWD} ) {
+        if ( substr( $dir, 0, 1 ) eq '/' ) {
+            $pkg = _lookup_pkg_for_path($dir);    # false if the directory they they think they are in is not configured so we can fall back to abspath
+        }
+        else {
+            # this should not be possible naturally i.e. what does PWD of 'i/am/here' mean, what is it relative to? why would it be set to ../bar/../../foo/bar?
+            warn "Relative \$PWD detected! Since that can be ambiguous we are ignoring \$PWD value and using absolute path for lookup instead\n";
+
+            # Patches welcome for this rabbit hole ;p file under YAGNI for now
+        }
+
+        # no package yet? check the directory they are actually in
+        if ( !$pkg ) {
+            if ( -r '/proc/self/cwd' ) {
+                $dir = readlink('/proc/self/cwd');
+            }
+            else {
+                require Cwd;
+                $dir = Cwd::getcwd();
+            }
+
+            $pkg = _lookup_pkg_for_path($dir);
+        }
+    }
+    else {
+        $pkg = _lookup_pkg_for_path($dir);    # false if the directory they they think they want is not configured so we can fall back to abspath
+
+        if ( !$pkg ) {
+            require Cwd;
+            my $abs = Cwd::abs_path($dir);
+
+            if ( defined $abs && $abs ne $dir ) {
+                $pkg = _lookup_pkg_for_path($abs);
+            }
+        }
+    }
+
+    return $pkg;
+}
 
 sub _get_from_cache {
     my ( $dir, $dir_stat ) = @_;
