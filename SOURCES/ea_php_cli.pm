@@ -177,6 +177,7 @@ sub _lookup_pkg_for_path {
     require Cpanel::PHP::Config;
 
     $dir =~ s{/+$}{};     # remove trailing /’s to since lookup is based on not having a trailing slash
+    $dir =~ tr{/}{}s;     # squash repetitive sequences of slashes, i.e. //// -> /
     while ($dir) {        # walk the path looking for the first configured PHP (if any)
         $uid = _get_uid($dir);    # EUID may not own $dir
         last if !$uid;            # root can't own a domain, thus can't set a PHP version
