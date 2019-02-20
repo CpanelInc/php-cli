@@ -1,5 +1,5 @@
 #!/usr/local/cpanel/3rdparty/bin/perl
-# cpanel - ea_php_cli.pm                           Copyright 2018 cPanel, L.L.C.
+# cpanel - ea_php_cli.pm                           Copyright 2019 cPanel, L.L.C.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 # This code is subject to the cPanel license. Unauthorized copying is prohibited
@@ -8,6 +8,9 @@ package ea_php_cli;
 
 use strict;
 use warnings;
+
+my $PATH_MAX       = 4096;
+my $SYSCALL_GETCWD = 79;     # 64bit only
 
 our $EUID;
 $EUID = $> if ${^GLOBAL_PHASE} eq "START";
@@ -74,8 +77,8 @@ sub proc_args {
     $dir //= ".";
 
     # since the lookup is based on abs path:
-    if ( $dir eq "." && -r '/proc/self/cwd' ) {
-        $dir = readlink('/proc/self/cwd');
+    if ( $dir eq "." ) {
+        $dir = _getcwd();
     }
     elsif ( substr( $dir, 0, 1 ) ne "/" || index( $dir, ".." ) != -1 ) {
         require Cwd;
@@ -101,7 +104,7 @@ sub get_pkg_for_dir {
     my $pkg = _get_from_cache( $dir, $dir_stat );
     return $pkg if $pkg;
 
-    $pkg = _lookup_pkg_for_path($dir);
+    $pkg = _get_pkg_for_path($dir);
 
     _cache_it_if_you_can( $dir, $dir_stat, $pkg );
 
@@ -139,6 +142,52 @@ sub exec_via_pkg {
 #################################
 #### get_pkg_for_dir() helpers ##
 #################################
+
+sub _get_pkg_for_path {
+    my ($dir) = @_;
+    my $pkg;
+
+    if ( $dir eq $ENV{PWD} ) {
+        if ( substr( $dir, 0, 1 ) eq '/' ) {
+            $pkg = _lookup_pkg_for_path($dir);    # false if the directory they they think they are in is not configured so we can fall back to abspath
+        }
+        else {
+            # this should not be possible naturally i.e. what does PWD of 'i/am/here' mean, what is it relative to? why would it be set to ../bar/../../foo/bar?
+            warn "Relative \$PWD detected! Since that can be ambiguous we are ignoring \$PWD value and using absolute path for lookup instead\n";
+
+            # Patches welcome for this rabbit hole ;p file under YAGNI for now
+        }
+
+        # no package yet? check the directory they are actually in
+        if ( !$pkg ) {
+            if ( -r '/proc/self/cwd' ) {
+                $dir = readlink('/proc/self/cwd');
+            }
+            else {
+                require Cwd;
+                $dir = Cwd::getcwd();
+            }
+
+            $pkg = _lookup_pkg_for_path($dir);
+        }
+    }
+    else {
+        $pkg = _lookup_pkg_for_path($dir);    # false if the directory they they think they want is not configured so we can fall back to abspath
+
+        if ( !$pkg ) {
+            require Cwd;
+            my $abs = Cwd::abs_path($dir);
+
+            if ( defined $abs && $abs ne $dir ) {
+                $pkg = _lookup_pkg_for_path($abs);
+            }
+        }
+    }
+
+    $pkg = _get_default_pkg() if !$pkg;
+
+    return $pkg;
+}
 
 sub _get_from_cache {
     my ( $dir, $dir_stat ) = @_;
@@ -197,7 +246,6 @@ sub _lookup_pkg_for_path {
             last;
         }
         elsif ( defined $getpwuid_cache{$uid} && defined $getpwuid_cache{$uid}->[7] && $dir eq $getpwuid_cache{$uid}->[7] ) {    # because we can cache this one still
-            $pkg = _get_default_pkg();
             last;
         }
 
@@ -269,6 +317,34 @@ sub _get_scl_prefix {
 sub _get_uid {
     my ($dir) = @_;
     return $EUID || ( stat($dir) )[4];
+}
+
+sub _getcwd {
+    length( pack( 'l!', 1000 ) ) * 8 == 64 or die "This system only support 64-bit Linux";
+
+    my $cwd = "\0" x 4096;
+    my $syscall_result = syscall( $SYSCALL_GETCWD, $cwd, $PATH_MAX );
+    if ( $syscall_result && $syscall_result != -1 ) {
+        $cwd =~ tr{\0}{}d;
+    }
+    else {
+        require Cwd;
+        $cwd = Cwd::getcwd();
+    }
+
+    if ( $ENV{'PWD'} && $cwd ne $ENV{'PWD'} && index( $ENV{'PWD'}, '../' ) == -1 ) {
+        require Cwd;
+        my $abs_path = Cwd::abs_path( $ENV{'PWD'} );
+        if ( $abs_path eq $cwd && ( stat($abs_path) )[4] == ( stat($cwd) )[4] ) {
+
+            # If the absolute path of $ENV{'PWD'} points the the directory we are
+            # currently in and it has the same owner than we except $ENV{'PWD'}
+            # as truthy
+            return $ENV{'PWD'};
+        }
+    }
+
+    return $cwd;
 }
 
 1;
