@@ -423,6 +423,131 @@ describe "CLI PHP module" => sub {
             is_deeply \@exec_args, [ "php-cgi", "ea-php$$", "args", "to", "php" ];
         };
     };
+
+    describe "_get_pkg_for_path() helper" => sub {
+        around {
+            no warnings "redefine";
+            local $test{get_php_config_for_users}       = {};
+            local $test{get_php_config_for_users_count} = 0;
+            local $test{_get_uid}                       = $$;
+            local $test{abs_path}                       = "/what/ever/$$";
+            $test{tmpdir}->contents( [] );
+            local $test{get_php_version_info} = { default => "i-am-default-hear-me-roar-$$" };
+            local *Cpanel::PHP::Config::get_php_config_for_users = sub { $test{get_php_config_for_users_count}++; $test{get_php_config_for_users} };
+            local *Cpanel::PHP::Config::get_php_version_info     = sub { $test{get_php_version_info} };
+            local *ea_php_cli::_get_uid                          = sub { $test{_get_uid} };
+            local *Cwd::abs_path                                 = sub { $test{abs_path} };
+            yield;
+        };
+
+        it "should return default when neither real or symlink path is configured" => sub {
+            my $real = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
+            my $sym = Test::MockFile->symlink( $real->{file_name}, "$test{tmpdir}->{file_name}/$$/www", { uid => $$ } );
+
+            my $pkg = ea_php_cli::_get_pkg_for_path( $sym->{file_name} );
+            is $pkg, "i-am-default-hear-me-roar-$$";
+        };
+
+        it "should return configured value of real path when using a symlink" => sub {
+            my $real = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
+            my $sym = Test::MockFile->symlink( $real->{file_name}, "$test{tmpdir}->{file_name}/$$/www", { uid => $$ } );
+
+            local $test{abs_path}                 = $real->{file_name};
+            local $test{get_php_config_for_users} = {
+                ffdna => {
+                    documentroot => $real->{file_name},
+                    phpversion   => "ea-php$$",
+                },
+            };
+
+            my $pkg = ea_php_cli::_get_pkg_for_path( $sym->{file_name} );
+            is $pkg, "ea-php$$";
+        };
+
+        it "should return configured value of real path when using a path w/ symlink nodes internally" => sub {
+            my $real = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
+            my $sym = Test::MockFile->symlink( $real->{file_name}, "$test{tmpdir}->{file_name}/$$/iamasym", { uid => $$ } );
+            my $dir = Test::MockFile->dir( "$sym->{file_name}/imadir", [], { uid => $$ } );
+
+            local $test{abs_path}                 = $real->{file_name};
+            local $test{get_php_config_for_users} = {
+                ffdna => {
+                    documentroot => $real->{file_name},
+                    phpversion   => "ea-php$$",
+                },
+            };
+
+            my $pkg = ea_php_cli::_get_pkg_for_path( $dir->{file_name} );
+            is $pkg, "ea-php$$";
+        };
+
+        it "should return configured value of the original real path, when it has been turned into a symlink" => sub {
+            my $new = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/proc/user/doc/public_html", [], { uid => $$ } );
+            my $orig = Test::MockFile->symlink( $new->{file_name}, "$test{tmpdir}->{file_name}/$$/public_html", { uid => $$ } );
+
+            local $test{abs_path}                 = $new->{file_name};
+            local $test{get_php_config_for_users} = {
+                ffdna => {
+                    documentroot => $orig->{file_name},
+                    phpversion   => "ea-php$$",
+                },
+            };
+
+            my $pkg = ea_php_cli::_get_pkg_for_path( $orig->{file_name} );
+            is $pkg, "ea-php$$";
+        };
+
+        it "should return default value given new target of the original real path, when it has been turned into a symlink" => sub {
+            my $new = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/proc/user/doc/public_html", [], { uid => $$ } );
+            my $orig = Test::MockFile->symlink( $new->{file_name}, "$test{tmpdir}->{file_name}/$$/public_html", { uid => $$ } );
+
+            local $test{abs_path}                 = $new->{file_name};
+            local $test{get_php_config_for_users} = {
+                ffdna => {
+                    documentroot => $orig->{file_name},
+                    phpversion   => "ea-php-$$",
+                },
+            };
+
+            my $pkg = ea_php_cli::_get_pkg_for_path( $new->{file_name} );
+            is $pkg, "i-am-default-hear-me-roar-$$";
+        };
+
+        it "should return configured value of the original real path, when it has been turned into a symlink w/ PWD abs" => sub {
+            my $new = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/proc/user/doc/public_html", [], { uid => $$ } );
+            my $orig = Test::MockFile->symlink( $new->{file_name}, "$test{tmpdir}->{file_name}/$$/public_html", { uid => $$ } );
+
+            local $test{abs_path}                 = $new->{file_name};
+            local $test{get_php_config_for_users} = {
+                ffdna => {
+                    documentroot => $orig->{file_name},
+                    phpversion   => "ea-php$$",
+                },
+            };
+            local $ENV{PWD} = $new->{file_name};
+            my $pkg = ea_php_cli::_get_pkg_for_path( $orig->{file_name} );
+            is $pkg, "ea-php$$";
+        };
+
+        it "should warn when PWD is in play and is relative and still get the configured value for CWD" => sub {
+            my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
+            my $proc = Test::MockFile->symlink( $dir->{file_name}, "/proc/self/cwd" );
+
+            local $test{abs_path}                 = $dir->{file_name};
+            local $test{get_php_config_for_users} = {
+                ffdna => {
+                    documentroot => $dir->{file_name},
+                    phpversion   => "ea-php$$",
+                },
+            };
+            local $ENV{PWD} = "$$/public_html";
+
+            my $pkg;
+            trap { $pkg = ea_php_cli::_get_pkg_for_path("$$/public_html") };
+            like $trap->stderr, qr/Relative \$PWD detected! Since that can be ambiguous we are ignoring \$PWD value and using absolute path for lookup instead/;
+            is $pkg, "ea-php$$";
+        };
+    };
 };
 
 runtests unless caller;

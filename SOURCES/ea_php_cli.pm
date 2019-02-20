@@ -184,6 +184,8 @@ sub _get_pkg_for_path {
         }
     }
 
+    $pkg = _get_default_pkg() if !$pkg;
+
     return $pkg;
 }
 
@@ -244,7 +246,6 @@ sub _lookup_pkg_for_path {
             last;
         }
         elsif ( defined $getpwuid_cache{$uid} && defined $getpwuid_cache{$uid}->[7] && $dir eq $getpwuid_cache{$uid}->[7] ) {    # because we can cache this one still
-            $pkg = _get_default_pkg();
             last;
         }
 
