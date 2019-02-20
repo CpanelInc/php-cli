@@ -160,15 +160,7 @@ sub _get_pkg_for_path {
 
         # no package yet? check the directory they are actually in
         if ( !$pkg ) {
-            if ( -r '/proc/self/cwd' ) {
-                $dir = readlink('/proc/self/cwd');
-            }
-            else {
-                require Cwd;
-                $dir = Cwd::getcwd();
-            }
-
-            $pkg = _lookup_pkg_for_path($dir);
+            $pkg = _lookup_pkg_for_path( _getcwd() );
         }
     }
     else {

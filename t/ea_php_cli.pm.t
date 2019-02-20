@@ -531,7 +531,9 @@ describe "CLI PHP module" => sub {
 
         it "should warn when PWD is in play and is relative and still get the configured value for CWD" => sub {
             my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
-            my $proc = Test::MockFile->symlink( $dir->{file_name}, "/proc/self/cwd" );
+
+            no warnings "redefine";
+            local *ea_php_cli::_getcwd = sub { $dir->{file_name} };
 
             local $test{abs_path}                 = $dir->{file_name};
             local $test{get_php_config_for_users} = {
