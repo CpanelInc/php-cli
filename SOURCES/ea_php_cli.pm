@@ -147,7 +147,7 @@ sub _get_pkg_for_path {
     my ($dir) = @_;
     my $pkg;
 
-    if ( $dir eq $ENV{PWD} ) {
+    if ( $ENV{'PWD'} && $dir eq $ENV{'PWD'} ) {
         if ( substr( $dir, 0, 1 ) eq '/' ) {
             $pkg = _lookup_pkg_for_path($dir);    # false if the directory they they think they are in is not configured so we can fall back to abspath
         }
