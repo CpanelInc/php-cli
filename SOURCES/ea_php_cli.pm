@@ -159,8 +159,10 @@ sub _get_pkg_for_path {
         }
 
         # no package yet? check the directory they are actually in
+        # and call abs_path to resolve any symlinks
         if ( !$pkg ) {
-            $pkg = _lookup_pkg_for_path( _getcwd() );
+            require Cwd;
+            $pkg = _lookup_pkg_for_path( Cwd::abs_path( _getcwd() ) );
         }
     }
     else {
