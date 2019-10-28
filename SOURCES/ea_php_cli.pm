@@ -45,14 +45,7 @@ sub proc_args {
         $idx++;
         next if $idx == $skipidx;
 
-        if ( $arg eq '-ea_php' ) {    # -ea_php NN
-
-            # EA-7961 will remove support for this flag
-            warn "-ea_php is deprecated (will be removed 2019-11), please use the version specific symlink instead (documented at https://go.cpanel.net/ea-php-cli)\n";
-            $pkg     = "ea-php" . $raw_args[ $idx + 1 ];
-            $skipidx = $idx + 1;
-        }
-        elsif ( substr( $arg, 0, 19 ) eq "--ea-reference-dir=" ) {    # --ea-reference-dir=DIR
+        if ( substr( $arg, 0, 19 ) eq "--ea-reference-dir=" ) {    # --ea-reference-dir=DIR
             ( undef, $dir ) = split( /=/, $arg, 2 );                  # if set from -f $arg: blow it away
         }
         elsif ( -f $arg ) {

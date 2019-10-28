@@ -6,7 +6,7 @@
 Name:           %{ns_name}-%{upstream_name}
 Version:        1.0.0
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 8
+%define release_prefix 9
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -55,6 +55,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Tue Oct 22 2019 Tim Mullin <tim@cpanel.net> - 1.0.0-9
+- EA-7961: Remove deprecated -ea_php flag
+
 * Tue Jul 23 2019 Tim Mullin <tim@cpanel.net> - 1.0.0-8
 - EA-8537: Fix php version detection when cwd is a symlink
 
