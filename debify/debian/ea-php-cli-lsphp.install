@@ -1,0 +1,4 @@
+# We are forced to maintain this list, because the generated one
+# is confused
+debian/tmp/usr/bin/lsphp /usr/bin
+debian/tmp/usr/bin/lsphp /usr/local/bin
