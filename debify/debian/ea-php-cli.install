@@ -1,0 +1,5 @@
+# We are forced to maintain this list, because the generated one
+# is confused
+debian/tmp/usr/bin/php /usr/bin
+debian/tmp/usr/local/bin/php /usr/local/bin
+debian/tmp/var/cpanel/ea4/ea_php_cli.pm /var/cpanel/ea4
