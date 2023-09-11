@@ -46,19 +46,19 @@ sub proc_args {
         next if $idx == $skipidx;
 
         if ( substr( $arg, 0, 19 ) eq "--ea-reference-dir=" ) {    # --ea-reference-dir=DIR
-            ( undef, $dir ) = split( /=/, $arg, 2 );                  # if set from -f $arg: blow it away
+            ( undef, $dir ) = split( /=/, $arg, 2 );               # if set from -f $arg: blow it away
         }
         elsif ( -f $arg ) {
             push @args, $arg;
 
-            if ( !defined $dir ) {                                    # set if not already set from --ea-reference-dir
+            if ( !defined $dir ) {                                 # set if not already set from --ea-reference-dir
                 $dir = $arg;
                 if ( index( $dir, "/" ) == -1 ) {
-                    $dir = ".";                                       # foo.php
+                    $dir = ".";                                    # foo.php
                 }
                 else {
                     $dir =~ s{/[^/]+$}{};
-                    $dir = "/" if $dir eq "";                         # /foo.php
+                    $dir = "/" if $dir eq "";                      # /foo.php
                 }
             }
         }
@@ -94,12 +94,18 @@ sub get_pkg_for_dir {
 
     return _get_default_pkg() if $dir_stat->[4] == 0;
 
-    my $pkg = _get_from_cache( $dir, $dir_stat );
-    return $pkg if $pkg;
+    my $pkg;
+    if ( !$ENV{NO_EA_PHP_CLI_CACHE} ) {
+        $pkg = _get_from_cache( $dir, $dir_stat );
+        return $pkg if $pkg;
+    }
+    else {
+        _unlink_cache_file( $dir, $dir_stat );
+    }
 
     $pkg = _get_pkg_for_path($dir);
 
-    _cache_it_if_you_can( $dir, $dir_stat, $pkg );
+    _cache_it_if_you_can( $dir, $dir_stat, $pkg ) unless $ENV{NO_EA_PHP_CLI_CACHE};
 
     return $pkg || _get_default_pkg();    # get_php_config_for_users() factors in default, so $pkg should always be set but just in case …
 
@@ -198,6 +204,16 @@ sub _get_from_cache {
             return $pkg if $pkg;
         }
     }
+
+    return;
+}
+
+sub _unlink_cache_file {
+    my ( $dir, $dir_stat ) = @_;
+
+    my $home     = ( getpwuid( $dir_stat->[4] ) )[7];
+    my $cachedir = _dir_to_cache_dir( $home, $dir );
+    unlink("$cachedir/.ea-php-cli.cache");
 
     return;
 }
@@ -309,7 +325,7 @@ sub _get_uid {
 sub _getcwd {
     length( pack( 'l!', 1000 ) ) * 8 == 64 or die "This system only support 64-bit Linux";
 
-    my $cwd = "\0" x 4096;
+    my $cwd            = "\0" x 4096;
     my $syscall_result = syscall( $SYSCALL_GETCWD, $cwd, $PATH_MAX );
     if ( $syscall_result && $syscall_result != -1 ) {
         $cwd =~ tr{\0}{}d;

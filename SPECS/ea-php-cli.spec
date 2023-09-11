@@ -5,7 +5,7 @@
 Name:           %{ns_name}-%{upstream_name}
 Version:        1.0.0
 # Doing release_prefix this way for Release allows for OBS-proof versioning, See EA-4566 for more details
-%define release_prefix 10
+%define release_prefix 11
 Release: %{release_prefix}%{?dist}.cpanel
 Vendor:         cPanel, Inc.
 Summary:        Execute PHP scripts with the configured php version.
@@ -54,6 +54,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) /usr/bin/lsphp
 
 %changelog
+* Mon Sep 11 2023 Sloane Bernstein <sloane@cpanel.net> - 1.0.0-11
+- ZC-11159: Invalidate/don't use cache if environment variable is passed
+
 * Tue May 09 2023 Brian Mendoza <brian.mendoza@cpanel.net> - 1.0.0-10
 - ZC-10936: Clean up Makefile and remove debug-package-nil
 
