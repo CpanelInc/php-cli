@@ -48,7 +48,7 @@ sub proc_args {
         if ( substr( $arg, 0, 19 ) eq "--ea-reference-dir=" ) {    # --ea-reference-dir=DIR
             ( undef, $dir ) = split( /=/, $arg, 2 );               # if set from -f $arg: blow it away
         }
-        elsif ( -f $arg ) {
+        elsif ( _file_exists($arg) ) {                             # ZC-11178: use a wrapper in place of -f for testing purposes
             push @args, $arg;
 
             if ( !defined $dir ) {                                 # set if not already set from --ea-reference-dir
@@ -82,6 +82,8 @@ sub proc_args {
 
     return ( $type, $pkg, $dir, @args );
 }
+
+sub _file_exists { return -f $_[0] }
 
 sub get_pkg_for_dir {
     my ( $type, $dir ) = @_;

@@ -23,8 +23,10 @@ use_ok "ea_php_cli";
 
 use Cwd ();
 use Path::Tiny 'path';
+use File::Path ();
 use Cpanel::PHP::Config ();
-use Test::MockFile;
+use Test::MockFile qw(nostrict);
+use Test::MockModule qw(strict);
 
 our %test = (
     cur_func => undef,
@@ -34,7 +36,17 @@ our %test = (
 share %test;
 my $tmp = Path::Tiny->tempdir();
 $HOME = $tmp;
-$test{tmpdir} = Test::MockFile->dir( "$tmp/foo/ea_php_cli.pm.d", [], { uid => $$ + 1 } );
+$test{tmpdir_gp} = Test::MockFile->dir( "$tmp" );
+mkdir "$tmp";
+$test{tmpdir_p} = Test::MockFile->dir( "$tmp/foo" );
+mkdir "$tmp/foo";
+$test{tmpdir} = Test::MockFile->dir( "$tmp/foo/ea_php_cli.pm.d" );
+mkdir "$tmp/foo/ea_php_cli.pm.d";
+chown( $$ + 1, $(, "$tmp/foo/ea_php_cli.pm.d" );
+
+# mock the -f wrapper to prevent Test::MockFile from seeing a relative path:
+$test{mock_file_exists} = Test::MockModule->new('ea_php_cli');
+$test{mock_file_exists}->redefine( _file_exists => sub { return -f Cwd::abs_path($_[0]) } );
 
 describe "CLI PHP module" => sub {
     spec_helper ".spec_helpers/all_type_funcs.pl";
@@ -47,7 +59,7 @@ describe "CLI PHP module" => sub {
             is [ ea_php_cli::proc_args("php-cgi") ]->[0], "php-cgi";
         };
 
-        it "should return undef pkg as second value when no pkg flag was given" => sub {
+        it "should return undef pkg as second value because pkg flag has been removed (see EA-7961)" => sub {
             is [ ea_php_cli::proc_args("php-cgi") ]->[1], undef;
         };
 
@@ -56,6 +68,7 @@ describe "CLI PHP module" => sub {
         };
 
         it "should return, as its third value, abs path of relative ./ file" => sub {
+            my $mock = Test::MockFile->file( Cwd::abs_path(".") . "/php.php", '' );
             is [ ea_php_cli::proc_args( "php-cgi", "./php.php" ) ]->[2], Cwd::abs_path(".");
         };
 
@@ -65,14 +78,17 @@ describe "CLI PHP module" => sub {
         };
 
         it "should return, as its third value, abs path of relative file w/out path parts" => sub {
+            my $mock = Test::MockFile->file( Cwd::abs_path(".") . "/php.php", '' );
             is [ ea_php_cli::proc_args( "php-cgi", "php.php" ) ]->[2], Cwd::abs_path(".");
         };
 
         it "should return, as its third value, abs path of --ea-reference-dir value when it exists" => sub {
+            my $mock = Test::MockFile->file( Cwd::abs_path(".") . "/php.php", '' );
             is [ ea_php_cli::proc_args( "php-cgi", "--ea-reference-dir=/usr/local/cpanel", "php.php" ) ]->[2], "/usr/local/cpanel";
         };
 
         it "should return, as its third value, abs path of --ea-reference-dir value when it does not exist" => sub {
+            my $mock = Test::MockFile->file( Cwd::abs_path(".") . "/php.php", '' );
             is [ ea_php_cli::proc_args( "php-cgi", "--ea-reference-dir=./derp$$", "php.php" ) ]->[2], Cwd::abs_path("./derp$$");
         };
 
@@ -80,6 +96,7 @@ describe "CLI PHP module" => sub {
 
             # Cannot use MockFile here due to the syscall
             my $tmpsymlinkroot = Path::Tiny->tempdir();
+            my $mock = Test::MockFile->dir($tmpsymlinkroot);
             mkdir("$tmpsymlinkroot/original_path");
             symlink( "original_path", "$tmpsymlinkroot/sym_path" );
             my $current_cwd = Cwd::getcwd();
@@ -125,7 +142,7 @@ describe "CLI PHP module" => sub {
             local $test{get_php_config_for_users}       = {};
             local $test{get_php_config_for_users_count} = 0;
             local $test{_get_uid}                       = $$;
-            $test{tmpdir}->contents( [] );
+            File::Path::remove_tree( $test{tmpdir}->path, { keep_root => 1 } );
             local $test{get_php_version_info} = { default => "i-am-default-hear-me-roar-$$" };
             local *Cpanel::PHP::Config::get_php_config_for_users = sub { $test{get_php_config_for_users_count}++; $test{get_php_config_for_users} };
             local *Cpanel::PHP::Config::get_php_version_info     = sub { $test{get_php_version_info} };
@@ -140,51 +157,63 @@ describe "CLI PHP module" => sub {
 
         it "should die when there is nothing set for the path and no default" => sub {
             local $test{get_php_version_info} = {};
-            trap { ea_php_cli::get_pkg_for_dir( "php-cgi", $test{tmpdir}->{file_name} ) };
+            trap { ea_php_cli::get_pkg_for_dir( "php-cgi", $test{tmpdir}->path ) };
             is $trap->die, "Default PHP is not configured!\n";
         };
 
         it "should go immediately to default pkg when run as root and dir is not owned by a user" => sub {
             local $test{_get_uid} = 0;
-            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{tmpdir}->{file_name} );
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{tmpdir}->path );
             is_deeply [ $pkg, $test{get_php_config_for_users_count} ], [ "i-am-default-hear-me-roar-$$", 0 ];
         };
 
         it "should get pkg configured for given dir" => sub {
-            my $foo = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/foo",     [], { uid => $$ + 1 } );
-            my $bar = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/foo/bar", [], { uid => $$ + 1 } );
+            my $foo = Test::MockFile->dir( $test{tmpdir}->path . "/$$/foo" );
+            mkdir $test{tmpdir}->path . "/$$/foo";
+            chown( $$ + 1, $(, $test{tmpdir}->path . "/$$/foo" );
+            my $bar = Test::MockFile->dir( $test{tmpdir}->path . "/$$/foo/bar" );
+            mkdir $test{tmpdir}->path . "/$$/foo/bar";
+            chown( $$ + 1, $(, $test{tmpdir}->path . "/$$/foo/bar" );
 
             local $test{get_php_config_for_users} = {
                 ffdna => {
-                    documentroot => "$test{tmpdir}->{file_name}/$$/foo/bar",
+                    documentroot => $test{tmpdir}->path . "/$$/foo/bar",
                     phpversion   => "ea-php-bar",
                 },
                 fqdnb => {
-                    documentroot => "$test{tmpdir}->{file_name}/$$/foo",
+                    documentroot => $test{tmpdir}->path . "/$$/foo",
                     phpversion   => "ea-php-foo",
                 },
             };
-            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", "$test{tmpdir}->{file_name}/$$/foo/bar" );
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{tmpdir}->path . "/$$/foo/bar" );
             is $pkg, "ea-php-bar";
         };
 
         it "should get pkg configured for given dir's parent" => sub {
-            my $foo = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/foo",     [], { uid => $$ + 1 } );
-            my $bar = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/foo/bar", [], { uid => $$ + 1 } );
+            my $foo = Test::MockFile->dir( $test{tmpdir}->path . "/$$/foo" );
+            mkdir $test{tmpdir}->path . "/$$/foo";
+            chown( $$ + 1, $(, $test{tmpdir}->path . "/$$/foo" );
+            my $bar = Test::MockFile->dir( $test{tmpdir}->path . "/$$/foo/bar" );
+            mkdir $test{tmpdir}->path . "/$$/foo/bar";
+            chown( $$ + 1, $(, $test{tmpdir}->path . "/$$/foo/bar" );
             local $test{get_php_config_for_users} = {
                 fqdnb => {
-                    documentroot => "$test{tmpdir}->{file_name}/$$/foo",
+                    documentroot => $test{tmpdir}->path . "/$$/foo",
                     phpversion   => "ea-php-foo",
                 },
             };
-            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", "$test{tmpdir}->{file_name}/$$/foo/bar" );
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{tmpdir}->path . "/$$/foo/bar" );
             is $pkg, "ea-php-foo";
         };
 
         it "should go to default if nothing is configured anywhere on the path" => sub {
-            my $foo = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/foo",     [], { uid => $$ + 1 } );
-            my $bar = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/foo/bar", [], { uid => $$ + 1 } );
-            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", "$test{tmpdir}->{file_name}/$$/foo/bar" );
+            my $foo = Test::MockFile->dir( $test{tmpdir}->path . "/$$/foo" );
+            mkdir $test{tmpdir}->path . "/$$/foo";
+            chown( $$ + 1, $(, $test{tmpdir}->path . "/$$/foo" );
+            my $bar = Test::MockFile->dir( $test{tmpdir}->path . "/$$/foo/bar" );
+            mkdir $test{tmpdir}->path . "/$$/foo/bar";
+            chown( $$ + 1, $(, $test{tmpdir}->path . "/$$/foo/bar" );
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{tmpdir}->path . "/$$/foo/bar" );
             is_deeply [ $pkg, $test{get_php_config_for_users_count} ], [ "i-am-default-hear-me-roar-$$", 1 ];
         };
     };
@@ -197,47 +226,55 @@ describe "CLI PHP module" => sub {
         };
 
         it "should cache in HOME/cpanel/ea-php-cli/ when it is in EUID's HOME" => sub {
-            my $dir = Test::MockFile->dir( "/home/derp/foo/bar/baz", [] );
+            my $dir = Test::MockFile->dir( "/home/derp/foo/bar/baz" );
+            mkdir "/home/derp/foo/bar/baz";
             is ea_php_cli::_dir_to_cache_dir( "/home/derp", "/home/derp/foo/bar/baz" ), "/home/derp/.cpanel/ea-php-cli/foo/bar/baz";
         };
 
         it "should not cache in HOME/cpanel/ea-php-cli/ when it is not in EUID's HOME" => sub {
-            my $dir = Test::MockFile->dir( "/usr/share/foo/bar/baz", [] );
+            my $dir = Test::MockFile->dir( "/home/derp/foo/bar/baz" );
+            mkdir "/home/derp/foo/bar/baz";
             is ea_php_cli::_dir_to_cache_dir( "/home/derp", "/usr/share/foo/bar/baz" ), "/usr/share/foo/bar/baz";
         };
 
         it "should return default package if DIR is owned by root" => sub {
-            my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => 0 } );
+            my $dir = Test::MockFile->dir( $test{tmpdir}->path . "/$$" );
+            mkdir $test{tmpdir}->path . "/$$";
+            chown( 0, $(, $test{tmpdir}->path . "/$$" );
             no warnings "redefine";
-            local *ea_php_cli::_dir_to_cache_dir = sub { $dir->{file_name} };
+            local *ea_php_cli::_dir_to_cache_dir = sub { $dir->path };
             local *ea_php_cli::_get_default_pkg  = sub { "DEF$$" };
-            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->{file_name} );
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->path );
             is $pkg, "DEF$$";
         };
 
         it "should return default if DIR is owned by non-cpanel users" => sub {
-            my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => $$ + 42 } );
+            my $dir = Test::MockFile->dir( $test{tmpdir}->path . "/$$" );
+            mkdir $test{tmpdir}->path . "/$$";
+            chown( $$ + 42, $(, $test{tmpdir}->path . "/$$" );
             no warnings "redefine";
-            local *ea_php_cli::_dir_to_cache_dir                 = sub { $dir->{file_name} };
+            local *ea_php_cli::_dir_to_cache_dir                 = sub { $dir->path };
             local *Cpanel::PHP::Config::get_php_config_for_users = sub { die "Failed to fetch userdata for “derp” at …" };
             local *ea_php_cli::_get_default_pkg                  = sub { "DEF$$" };
-            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->{file_name} );
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->path );
             is $pkg, "DEF$$";
         };
 
         it "should return DIR cache if it is newer than the DIR owner's user data" => sub {
-            my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => $$ + 1 } );
+            my $dir = Test::MockFile->dir( $test{tmpdir}->path . "/$$" );
+            mkdir $test{tmpdir}->path . "/$$";
+            chown( $$ + 1, $(, $test{tmpdir}->path . "/$$" );
             no warnings "redefine";
-            local *ea_php_cli::_dir_to_cache_dir = sub { $dir->{file_name} };
+            local *ea_php_cli::_dir_to_cache_dir = sub { $dir->path };
 
             # Test::MockFile->symlink() is broken ATM: https://github.com/CpanelInc/Test-MockFile/issues/25
-            # my $cch = Test::MockFile->symlink( "ea-php88", "$dir->{file_name}/.ea-php-cli.cache" );
-            path( $dir->{file_name} )->mkpath;
-            symlink( "ea-php88", "$dir->{file_name}/.ea-php-cli.cache" );
-            my $cache_mtime = ( lstat("$dir->{file_name}/.ea-php-cli.cache") )[9];
+            # my $cch = Test::MockFile->symlink( "ea-php88", $dir->path . "/.ea-php-cli.cache" );
+            path( $dir->path )->mkpath;
+            symlink( "ea-php88", $dir->path . "/.ea-php-cli.cache" );
+            my $cache_mtime = ( lstat($dir->path . "/.ea-php-cli.cache") )[9];
             my $udr = Test::MockFile->file( "/var/cpanel/userdata/user$$/cache", "", { mtime => $cache_mtime - 42 } );
             my $pkg;
-            trap { $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->{file_name} ) };
+            trap { $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->path ) };
             is $pkg, "ea-php88";
         };
 
@@ -247,21 +284,23 @@ describe "CLI PHP module" => sub {
                 local *Cpanel::PHP::Config::get_php_config_for_users = sub {
                     return {
                         ffdna => {
-                            documentroot => "$test{tmpdir}->{file_name}/$$",
+                            documentroot => $test{tmpdir}->path . "/$$",
                             phpversion   => "ea-php-wop",
                         },
                       },
                       ;
                 };
 
-                local $test{cached_dir} = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$", [], { uid => $$ + 1 } );
-                local *ea_php_cli::_dir_to_cache_dir = sub { $test{cached_dir}->{file_name} };
+                local $test{cached_dir} = Test::MockFile->dir( $test{tmpdir}->path . "/$$" );
+                mkdir $test{tmpdir}->path . "/$$";
+                chown( $$ + 1, $(, $test{tmpdir}->path . "/$$" );
+                local *ea_php_cli::_dir_to_cache_dir = sub { $test{cached_dir}->path };
 
                 # Test::MockFile->symlink() is broken ATM: https://github.com/CpanelInc/Test-MockFile/issues/25
-                path( $test{cached_dir}->{file_name} )->mkpath;
-                unlink "$test{cached_dir}->{file_name}/.ea-php-cli.cache";
-                symlink( "ea-php88", "$test{cached_dir}->{file_name}/.ea-php-cli.cache" );
-                my $cache_mtime = ( lstat("$test{cached_dir}->{file_name}/.ea-php-cli.cache") )[9];
+                path( $test{cached_dir}->path )->mkpath;
+                unlink $test{cached_dir}->path . "/.ea-php-cli.cache";
+                symlink( "ea-php88", $test{cached_dir}->path . "/.ea-php-cli.cache" );
+                my $cache_mtime = ( lstat($test{cached_dir}->path . "/.ea-php-cli.cache") )[9];
 
                 local $test{userdata_cache} = Test::MockFile->file( "/var/cpanel/userdata/user$$/cache", "", { mtime => $cache_mtime + 42 } );
 
@@ -269,24 +308,24 @@ describe "CLI PHP module" => sub {
             };
 
             it "should lookup and return the DIR setting" => sub {
-                my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->{file_name} );
+                my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
                 is $pkg, "ea-php-wop";
             };
 
             it "should cache the lookup if the EUID owns the DIR" => sub {
                 local $ea_php_cli::EUID = $$ + 1;
-                my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->{file_name} );
-                is readlink("$test{cached_dir}->{file_name}/.ea-php-cli.cache"), "ea-php-wop";
+                my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
+                is readlink($test{cached_dir}->path . "/.ea-php-cli.cache"), "ea-php-wop";
             };
 
             it "should NOT cache the lookup if the EUID does not own the DIR" => sub {
-                my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->{file_name} );
-                is readlink("$test{cached_dir}->{file_name}/.ea-php-cli.cache"), "ea-php88";
+                my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
+                is readlink($test{cached_dir}->path . "/.ea-php-cli.cache"), "ea-php88";
             };
 
             it "should cache the default under EUID when DIR is HOME" => sub {
                 local $ea_php_cli::EUID = $$ + 1;
-                local $HOME             = $test{tmpdir}->{file_name};
+                local $HOME             = $test{tmpdir}->path;
                 no warnings "redefine";
                 local *ea_php_cli::_dir_to_cache_dir = sub { $HOME };
                 local *ea_php_cli::_get_default_pkg  = sub { "DEF$$" };
@@ -413,7 +452,7 @@ describe "CLI PHP module" => sub {
             local $test{get_php_config_for_users_count} = 0;
             local $test{_get_uid}                       = $$;
             local $test{abs_path}                       = "/what/ever/$$";
-            $test{tmpdir}->contents( [] );
+            File::Path::remove_tree( $test{tmpdir}->path, { keep_root => 1 } );
             local $test{get_php_version_info} = { default => "i-am-default-hear-me-roar-$$" };
             local *Cpanel::PHP::Config::get_php_config_for_users = sub { $test{get_php_config_for_users_count}++; $test{get_php_config_for_users} };
             local *Cpanel::PHP::Config::get_php_version_info     = sub { $test{get_php_version_info} };
@@ -423,104 +462,120 @@ describe "CLI PHP module" => sub {
         };
 
         it "should return default when neither real or symlink path is configured" => sub {
-            my $real = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
-            my $sym = Test::MockFile->symlink( $real->{file_name}, "$test{tmpdir}->{file_name}/$$/www", { uid => $$ } );
+            my $real = Test::MockFile->dir( $test{tmpdir}->path . "/$$/public_html" );
+            mkdir $test{tmpdir}->path . "/$$/public_html";
+            chown( $$, $(, $test{tmpdir}->path . "/$$/public_html" );
+            my $sym = Test::MockFile->symlink( $real->path, $test{tmpdir}->path . "/$$/www", { uid => $$ } );
 
-            my $pkg = ea_php_cli::_get_pkg_for_path( $sym->{file_name} );
+            my $pkg = ea_php_cli::_get_pkg_for_path( $sym->path );
             is $pkg, "i-am-default-hear-me-roar-$$";
         };
 
         it "should return configured value of real path when using a symlink" => sub {
-            my $real = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
-            my $sym = Test::MockFile->symlink( $real->{file_name}, "$test{tmpdir}->{file_name}/$$/www", { uid => $$ } );
+            my $real = Test::MockFile->dir( $test{tmpdir}->path . "/$$/public_html" );
+            mkdir $test{tmpdir}->path . "/$$/public_html";
+            chown( $$, $(, $test{tmpdir}->path . "/$$/public_html" );
+            my $sym = Test::MockFile->symlink( $real->path, $test{tmpdir}->path . "/$$/www", { uid => $$ } );
 
-            local $test{abs_path}                 = $real->{file_name};
+            local $test{abs_path}                 = $real->path;
             local $test{get_php_config_for_users} = {
                 ffdna => {
-                    documentroot => $real->{file_name},
+                    documentroot => $real->path,
                     phpversion   => "ea-php$$",
                 },
             };
 
-            my $pkg = ea_php_cli::_get_pkg_for_path( $sym->{file_name} );
+            my $pkg = ea_php_cli::_get_pkg_for_path( $sym->path );
             is $pkg, "ea-php$$";
         };
 
         it "should return configured value of real path when using a path w/ symlink nodes internally" => sub {
-            my $real = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
-            my $sym = Test::MockFile->symlink( $real->{file_name}, "$test{tmpdir}->{file_name}/$$/iamasym", { uid => $$ } );
-            my $dir = Test::MockFile->dir( "$sym->{file_name}/imadir", [], { uid => $$ } );
+            my $real = Test::MockFile->dir( $test{tmpdir}->path . "/$$/public_html" );
+            mkdir $test{tmpdir}->path . "/$$/public_html";
+            chown( $$, $(, $test{tmpdir}->path . "/$$/public_html" );
+            my $sym = Test::MockFile->symlink( $real->path, $test{tmpdir}->path . "/$$/iamasym", { uid => $$ } );
+            my $dir = Test::MockFile->dir( $sym->path . "/imadir");
+            mkdir $sym->path . "/imadir";
+            chown( $$, $(, $sym->path . "/imadir" );
 
-            local $test{abs_path}                 = $real->{file_name};
+            local $test{abs_path}                 = $real->path;
             local $test{get_php_config_for_users} = {
                 ffdna => {
-                    documentroot => $real->{file_name},
+                    documentroot => $real->path,
                     phpversion   => "ea-php$$",
                 },
             };
 
-            my $pkg = ea_php_cli::_get_pkg_for_path( $dir->{file_name} );
+            my $pkg = ea_php_cli::_get_pkg_for_path( $dir->path );
             is $pkg, "ea-php$$";
         };
 
         it "should return configured value of the original real path, when it has been turned into a symlink" => sub {
-            my $new = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/proc/user/doc/public_html", [], { uid => $$ } );
-            my $orig = Test::MockFile->symlink( $new->{file_name}, "$test{tmpdir}->{file_name}/$$/public_html", { uid => $$ } );
+            my $new = Test::MockFile->dir( $test{tmpdir}->path . "/$$/proc/user/doc/public_html" );
+            mkdir $test{tmpdir}->path . "/$$/proc/user/doc/public_html";
+            chown( $$, $(, $test{tmpdir}->path . "/$$/proc/user/doc/public_html" );
+            my $orig = Test::MockFile->symlink( $new->path, $test{tmpdir}->path . "/$$/public_html", { uid => $$ } );
 
-            local $test{abs_path}                 = $new->{file_name};
+            local $test{abs_path}                 = $new->path;
             local $test{get_php_config_for_users} = {
                 ffdna => {
-                    documentroot => $orig->{file_name},
+                    documentroot => $orig->path,
                     phpversion   => "ea-php$$",
                 },
             };
 
-            my $pkg = ea_php_cli::_get_pkg_for_path( $orig->{file_name} );
+            my $pkg = ea_php_cli::_get_pkg_for_path( $orig->path );
             is $pkg, "ea-php$$";
         };
 
         it "should return default value given new target of the original real path, when it has been turned into a symlink" => sub {
-            my $new = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/proc/user/doc/public_html", [], { uid => $$ } );
-            my $orig = Test::MockFile->symlink( $new->{file_name}, "$test{tmpdir}->{file_name}/$$/public_html", { uid => $$ } );
+            my $new = Test::MockFile->dir( $test{tmpdir}->path . "/$$/proc/user/doc/public_html" );
+            mkdir $test{tmpdir}->path . "/$$/proc/user/doc/public_html";
+            chown( $$, $(, $test{tmpdir}->path . "/$$/proc/user/doc/public_html" );
+            my $orig = Test::MockFile->symlink( $new->path, $test{tmpdir}->path . "/$$/public_html", { uid => $$ } );
 
-            local $test{abs_path}                 = $new->{file_name};
+            local $test{abs_path}                 = $new->path;
             local $test{get_php_config_for_users} = {
                 ffdna => {
-                    documentroot => $orig->{file_name},
+                    documentroot => $orig->path,
                     phpversion   => "ea-php-$$",
                 },
             };
 
-            my $pkg = ea_php_cli::_get_pkg_for_path( $new->{file_name} );
+            my $pkg = ea_php_cli::_get_pkg_for_path( $new->path );
             is $pkg, "i-am-default-hear-me-roar-$$";
         };
 
         it "should return configured value of the original real path, when it has been turned into a symlink w/ PWD abs" => sub {
-            my $new = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/proc/user/doc/public_html", [], { uid => $$ } );
-            my $orig = Test::MockFile->symlink( $new->{file_name}, "$test{tmpdir}->{file_name}/$$/public_html", { uid => $$ } );
+            my $new = Test::MockFile->dir( $test{tmpdir}->path . "/$$/proc/user/doc/public_html" );
+            mkdir $test{tmpdir}->path . "/$$/proc/user/doc/public_html";
+            chown( $$, $(, $test{tmpdir}->path . "/$$/proc/user/doc/public_html" );
+            my $orig = Test::MockFile->symlink( $new->path, $test{tmpdir}->path . "/$$/public_html", { uid => $$ } );
 
-            local $test{abs_path}                 = $new->{file_name};
+            local $test{abs_path}                 = $new->path;
             local $test{get_php_config_for_users} = {
                 ffdna => {
-                    documentroot => $orig->{file_name},
+                    documentroot => $orig->path,
                     phpversion   => "ea-php$$",
                 },
             };
-            local $ENV{PWD} = $new->{file_name};
-            my $pkg = ea_php_cli::_get_pkg_for_path( $orig->{file_name} );
+            local $ENV{PWD} = $new->path;
+            my $pkg = ea_php_cli::_get_pkg_for_path( $orig->path );
             is $pkg, "ea-php$$";
         };
 
         it "should warn when PWD is in play and is relative and still get the configured value for CWD" => sub {
-            my $dir = Test::MockFile->dir( "$test{tmpdir}->{file_name}/$$/public_html", [], { uid => $$ } );
+            my $dir = Test::MockFile->dir( $test{tmpdir}->path . "/$$/public_html" );
+            mkdir $test{tmpdir}->path . "/$$/public_html";
+            chown( $$, $(, $test{tmpdir}->path . "/$$/public_html" );
 
             no warnings "redefine";
-            local *ea_php_cli::_getcwd = sub { $dir->{file_name} };
+            local *ea_php_cli::_getcwd = sub { $dir->path };
 
-            local $test{abs_path}                 = $dir->{file_name};
+            local $test{abs_path}                 = $dir->path;
             local $test{get_php_config_for_users} = {
                 ffdna => {
-                    documentroot => $dir->{file_name},
+                    documentroot => $dir->path,
                     phpversion   => "ea-php$$",
                 },
             };
