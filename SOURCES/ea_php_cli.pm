@@ -36,7 +36,7 @@ sub proc_args {
     $type //= "undefined";
     die "Invalid type ($type)\n" if !exists $types{$type};
 
-    my ( $pkg, $dir, @args );
+    my ( $dir, @args );
 
     my $idx     = -1;
     my $skipidx = -1;
@@ -80,7 +80,7 @@ sub proc_args {
 
     die "Could not determine path to lookup PHP setting for based on arguments\n" if !$dir;    # this would be pretty odd
 
-    return ( $type, $pkg, $dir, @args );
+    return ( $type, undef, $dir, @args );                                                      # This function no longer returns package data as of EA-7961.
 }
 
 sub _file_exists { return -f $_[0] }
