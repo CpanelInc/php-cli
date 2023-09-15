@@ -287,8 +287,7 @@ describe "CLI PHP module" => sub {
                             documentroot => $test{tmpdir}->path . "/$$",
                             phpversion   => "ea-php-wop",
                         },
-                      },
-                      ;
+                    };
                 };
 
                 local $test{cached_dir} = Test::MockFile->dir( $test{tmpdir}->path . "/$$" );
@@ -332,6 +331,74 @@ describe "CLI PHP module" => sub {
                 my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $HOME );
                 is readlink("$HOME/.ea-php-cli.cache"), "DEF$$";
             };
+        };
+    };
+
+    describe ", when invoked with NO_EA_PHP_CLI_CACHE=1 in the environment," => sub {
+        around {
+            no warnings "redefine";
+            local *Cpanel::PHP::Config::get_php_config_for_users = sub {
+                return {
+                    ffdna => {
+                        documentroot => $test{tmpdir}->path . "/$$",
+                        phpversion   => "ea-php-NaN",
+                    },
+                };
+            };
+
+            local $test{cached_dir} = Test::MockFile->dir( $test{tmpdir}->path . "/$$" );
+            mkdir $test{cached_dir}->path;
+            chown( $$ + 1, $(, $test{cached_dir}->path );
+            local *ea_php_cli::_dir_to_cache_dir = sub { $test{cached_dir}->path };
+
+            local $test{userdata_cache} = Test::MockFile->file( "/var/cpanel/userdata/user$$/cache", "" );
+
+            local $ENV{NO_EA_PHP_CLI_CACHE} = 1;
+            yield;
+        };
+
+        it "should return a non-cached value when no local cache exists" => sub {
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
+            is $pkg, "ea-php-NaN";
+        };
+
+        it "should return a non-cached value when a cache exists and is newer" => sub {
+            my $cache_file = $test{cached_dir}->path . "/.ea-php-cli.cache";
+            symlink( "ea-php99", $cache_file );
+
+            my $cache_mtime = ( lstat($cache_file) )[9];
+            $test{userdata_cache}->touch($cache_mtime - 42);
+
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
+            is $pkg, "ea-php-NaN";
+        };
+
+        it "should return a non-cached value when a cache exists and is older" => sub {
+            my $cache_file = $test{cached_dir}->path . "/.ea-php-cli.cache";
+            symlink( "ea-php99", $cache_file );
+
+            my $cache_mtime = ( lstat($cache_file) )[9];
+            $test{userdata_cache}->touch($cache_mtime + 42);
+
+            my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
+            is $pkg, "ea-php-NaN";
+        };
+
+        it "should not leave a cache" => sub {
+            my $cache_file = $test{cached_dir}->path . "/.ea-php-cli.cache";
+            $test{userdata_cache}->touch();
+
+            ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
+            ok !-f $cache_file;
+        };
+
+        it "should delete an existing cache" => sub {
+            my $cache_file = $test{cached_dir}->path . "/.ea-php-cli.cache";
+            symlink( "ea-php99", $cache_file );
+            $test{userdata_cache}->touch();
+
+            ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
+            ok !-f $cache_file;
         };
     };
 
