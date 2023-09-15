@@ -23,10 +23,10 @@ use_ok "ea_php_cli";
 
 use Cwd ();
 use Path::Tiny 'path';
-use File::Path ();
+use File::Path          ();
 use Cpanel::PHP::Config ();
-use Test::MockFile qw(nostrict);
-use Test::MockModule qw(strict);
+use Test::MockFile      qw(nostrict);
+use Test::MockModule    qw(strict);
 
 our %test = (
     cur_func => undef,
@@ -36,17 +36,17 @@ our %test = (
 share %test;
 my $tmp = Path::Tiny->tempdir();
 $HOME = $tmp;
-$test{tmpdir_gp} = Test::MockFile->dir( "$tmp" );
+$test{tmpdir_gp} = Test::MockFile->dir("$tmp");
 mkdir "$tmp";
-$test{tmpdir_p} = Test::MockFile->dir( "$tmp/foo" );
+$test{tmpdir_p} = Test::MockFile->dir("$tmp/foo");
 mkdir "$tmp/foo";
-$test{tmpdir} = Test::MockFile->dir( "$tmp/foo/ea_php_cli.pm.d" );
+$test{tmpdir} = Test::MockFile->dir("$tmp/foo/ea_php_cli.pm.d");
 mkdir "$tmp/foo/ea_php_cli.pm.d";
 chown( $$ + 1, $(, "$tmp/foo/ea_php_cli.pm.d" );
 
 # mock the -f wrapper to prevent Test::MockFile from seeing a relative path:
 $test{mock_file_exists} = Test::MockModule->new('ea_php_cli');
-$test{mock_file_exists}->redefine( _file_exists => sub { return -f Cwd::abs_path($_[0]) } );
+$test{mock_file_exists}->redefine( _file_exists => sub { return -f Cwd::abs_path( $_[0] ) } );
 
 describe "CLI PHP module" => sub {
     spec_helper ".spec_helpers/all_type_funcs.pl";
@@ -96,7 +96,7 @@ describe "CLI PHP module" => sub {
 
             # Cannot use MockFile here due to the syscall
             my $tmpsymlinkroot = Path::Tiny->tempdir();
-            my $mock = Test::MockFile->dir($tmpsymlinkroot);
+            my $mock           = Test::MockFile->dir($tmpsymlinkroot);
             mkdir("$tmpsymlinkroot/original_path");
             symlink( "original_path", "$tmpsymlinkroot/sym_path" );
             my $current_cwd = Cwd::getcwd();
@@ -143,7 +143,7 @@ describe "CLI PHP module" => sub {
             local $test{get_php_config_for_users_count} = 0;
             local $test{_get_uid}                       = $$;
             File::Path::remove_tree( $test{tmpdir}->path, { keep_root => 1 } );
-            local $test{get_php_version_info} = { default => "i-am-default-hear-me-roar-$$" };
+            local $test{get_php_version_info}                    = { default => "i-am-default-hear-me-roar-$$" };
             local *Cpanel::PHP::Config::get_php_config_for_users = sub { $test{get_php_config_for_users_count}++; $test{get_php_config_for_users} };
             local *Cpanel::PHP::Config::get_php_version_info     = sub { $test{get_php_version_info} };
             local *ea_php_cli::_get_uid                          = sub { $test{_get_uid} };
@@ -226,13 +226,13 @@ describe "CLI PHP module" => sub {
         };
 
         it "should cache in HOME/cpanel/ea-php-cli/ when it is in EUID's HOME" => sub {
-            my $dir = Test::MockFile->dir( "/home/derp/foo/bar/baz" );
+            my $dir = Test::MockFile->dir("/home/derp/foo/bar/baz");
             mkdir "/home/derp/foo/bar/baz";
             is ea_php_cli::_dir_to_cache_dir( "/home/derp", "/home/derp/foo/bar/baz" ), "/home/derp/.cpanel/ea-php-cli/foo/bar/baz";
         };
 
         it "should not cache in HOME/cpanel/ea-php-cli/ when it is not in EUID's HOME" => sub {
-            my $dir = Test::MockFile->dir( "/home/derp/foo/bar/baz" );
+            my $dir = Test::MockFile->dir("/home/derp/foo/bar/baz");
             mkdir "/home/derp/foo/bar/baz";
             is ea_php_cli::_dir_to_cache_dir( "/home/derp", "/usr/share/foo/bar/baz" ), "/usr/share/foo/bar/baz";
         };
@@ -271,8 +271,8 @@ describe "CLI PHP module" => sub {
             # my $cch = Test::MockFile->symlink( "ea-php88", $dir->path . "/.ea-php-cli.cache" );
             path( $dir->path )->mkpath;
             symlink( "ea-php88", $dir->path . "/.ea-php-cli.cache" );
-            my $cache_mtime = ( lstat($dir->path . "/.ea-php-cli.cache") )[9];
-            my $udr = Test::MockFile->file( "/var/cpanel/userdata/user$$/cache", "", { mtime => $cache_mtime - 42 } );
+            my $cache_mtime = ( lstat( $dir->path . "/.ea-php-cli.cache" ) )[9];
+            my $udr         = Test::MockFile->file( "/var/cpanel/userdata/user$$/cache", "", { mtime => $cache_mtime - 42 } );
             my $pkg;
             trap { $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $dir->path ) };
             is $pkg, "ea-php88";
@@ -299,7 +299,7 @@ describe "CLI PHP module" => sub {
                 path( $test{cached_dir}->path )->mkpath;
                 unlink $test{cached_dir}->path . "/.ea-php-cli.cache";
                 symlink( "ea-php88", $test{cached_dir}->path . "/.ea-php-cli.cache" );
-                my $cache_mtime = ( lstat($test{cached_dir}->path . "/.ea-php-cli.cache") )[9];
+                my $cache_mtime = ( lstat( $test{cached_dir}->path . "/.ea-php-cli.cache" ) )[9];
 
                 local $test{userdata_cache} = Test::MockFile->file( "/var/cpanel/userdata/user$$/cache", "", { mtime => $cache_mtime + 42 } );
 
@@ -314,12 +314,12 @@ describe "CLI PHP module" => sub {
             it "should cache the lookup if the EUID owns the DIR" => sub {
                 local $ea_php_cli::EUID = $$ + 1;
                 my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
-                is readlink($test{cached_dir}->path . "/.ea-php-cli.cache"), "ea-php-wop";
+                is readlink( $test{cached_dir}->path . "/.ea-php-cli.cache" ), "ea-php-wop";
             };
 
             it "should NOT cache the lookup if the EUID does not own the DIR" => sub {
                 my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
-                is readlink($test{cached_dir}->path . "/.ea-php-cli.cache"), "ea-php88";
+                is readlink( $test{cached_dir}->path . "/.ea-php-cli.cache" ), "ea-php88";
             };
 
             it "should cache the default under EUID when DIR is HOME" => sub {
@@ -367,7 +367,7 @@ describe "CLI PHP module" => sub {
             symlink( "ea-php99", $cache_file );
 
             my $cache_mtime = ( lstat($cache_file) )[9];
-            $test{userdata_cache}->touch($cache_mtime - 42);
+            $test{userdata_cache}->touch( $cache_mtime - 42 );
 
             my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
             is $pkg, "ea-php-NaN";
@@ -378,7 +378,7 @@ describe "CLI PHP module" => sub {
             symlink( "ea-php99", $cache_file );
 
             my $cache_mtime = ( lstat($cache_file) )[9];
-            $test{userdata_cache}->touch($cache_mtime + 42);
+            $test{userdata_cache}->touch( $cache_mtime + 42 );
 
             my $pkg = ea_php_cli::get_pkg_for_dir( "php-cgi", $test{cached_dir}->path );
             is $pkg, "ea-php-NaN";
@@ -477,7 +477,7 @@ describe "CLI PHP module" => sub {
         it "should call get_pkg_for_dir() when args did not indicate a package" => sub {
             no warnings "redefine";
             my @pkg_args;
-            local *ea_php_cli::proc_args = sub { return ( "php-cgi", undef, ".", "args", "to", "php" ) };
+            local *ea_php_cli::proc_args       = sub { return ( "php-cgi", undef, ".", "args", "to", "php" ) };
             local *ea_php_cli::get_pkg_for_dir = sub { @pkg_args = @_; return "ea-php$$" };
             trap { ea_php_cli::run( "php-cgi", "args", "to", "php" ) };
             is_deeply \@pkg_args, [ "php-cgi", "." ];    # not Cwd::abs_path(".") since we're mocking
@@ -486,7 +486,7 @@ describe "CLI PHP module" => sub {
         it "should not call get_pkg_for_dir() when args did indicate a package" => sub {
             no warnings "redefine";
             my @pkg_args;
-            local *ea_php_cli::proc_args = sub { return ( "php-cgi", "ea-php$$", ".", "args", "to", "php" ) };
+            local *ea_php_cli::proc_args       = sub { return ( "php-cgi", "ea-php$$", ".", "args", "to", "php" ) };
             local *ea_php_cli::get_pkg_for_dir = sub { @pkg_args = @_; return "ea-php$$" };
             trap { ea_php_cli::run( "php-cgi", "args", "to", "php" ) };
             is_deeply \@pkg_args, [];
@@ -495,7 +495,7 @@ describe "CLI PHP module" => sub {
         it "die when get_pkg_for_dir() is called but it can’t find a package" => sub {
             no warnings "redefine";
             my @pkg_args;
-            local *ea_php_cli::proc_args = sub { return ( "php-cgi", undef, ".", "args", "to", "php" ) };
+            local *ea_php_cli::proc_args       = sub { return ( "php-cgi", undef, ".", "args", "to", "php" ) };
             local *ea_php_cli::get_pkg_for_dir = sub { @pkg_args = @_; return; };
             trap { ea_php_cli::run( "php-cgi", "args", "to", "php" ) };
             is $trap->die, "Could not determine package for “.”\n";    # not Cwd::abs_path(".") since we're mocking
@@ -505,7 +505,7 @@ describe "CLI PHP module" => sub {
         it "should call exec_via_pkg() as expected" => sub {
             no warnings "redefine";
             my @exec_args;
-            local *ea_php_cli::proc_args = sub { return ( "php-cgi", "ea-php$$", ".", "args", "to", "php" ) };
+            local *ea_php_cli::proc_args    = sub { return ( "php-cgi", "ea-php$$", ".", "args", "to", "php" ) };
             local *ea_php_cli::exec_via_pkg = sub { @exec_args = @_ };
             trap { ea_php_cli::run( "php-cgi", "args", "to", "php" ) };
             is_deeply \@exec_args, [ "php-cgi", "ea-php$$", "args", "to", "php" ];
@@ -520,7 +520,7 @@ describe "CLI PHP module" => sub {
             local $test{_get_uid}                       = $$;
             local $test{abs_path}                       = "/what/ever/$$";
             File::Path::remove_tree( $test{tmpdir}->path, { keep_root => 1 } );
-            local $test{get_php_version_info} = { default => "i-am-default-hear-me-roar-$$" };
+            local $test{get_php_version_info}                    = { default => "i-am-default-hear-me-roar-$$" };
             local *Cpanel::PHP::Config::get_php_config_for_users = sub { $test{get_php_config_for_users_count}++; $test{get_php_config_for_users} };
             local *Cpanel::PHP::Config::get_php_version_info     = sub { $test{get_php_version_info} };
             local *ea_php_cli::_get_uid                          = sub { $test{_get_uid} };
@@ -561,7 +561,7 @@ describe "CLI PHP module" => sub {
             mkdir $test{tmpdir}->path . "/$$/public_html";
             chown( $$, $(, $test{tmpdir}->path . "/$$/public_html" );
             my $sym = Test::MockFile->symlink( $real->path, $test{tmpdir}->path . "/$$/iamasym", { uid => $$ } );
-            my $dir = Test::MockFile->dir( $sym->path . "/imadir");
+            my $dir = Test::MockFile->dir( $sym->path . "/imadir" );
             mkdir $sym->path . "/imadir";
             chown( $$, $(, $sym->path . "/imadir" );
 
